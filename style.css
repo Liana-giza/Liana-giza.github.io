@@ -229,7 +229,7 @@ figcaption { margin-top: 0.6rem; color: var(--muted); font-size: 0.875rem; font-
 .col { border-radius: 8px; padding: 0.9rem 1rem; }
 .col-flag { background: var(--spent); color: var(--spent-ink); }
 .col-ignore { background: var(--left); color: var(--left-ink); }
-.col h4 { margin: 0 0 0.5rem; font-family: var(--sans); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.col h3 { margin: 0 0 0.5rem; font-family: var(--sans); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; }
 .col ul { margin: 0; padding-left: 1.05rem; }
 .col li { font-family: var(--sans); font-size: 0.875rem; line-height: 1.45; margin: 0.3rem 0; }
 
