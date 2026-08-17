@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taking the long-lived AWS keys away</title>
+<meta name="description" content="Replacing static AWS credentials across CI pipelines and Kubernetes workloads with short-lived, federated identity — 120+ access keys eliminated.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="./">&larr; Projects</a>
+
+  <h1 class="name">Taking the long-lived AWS keys away</h1>
+
+  <h2>What it is</h2>
+  <p class="lede">Build pipelines and applications used to authenticate to AWS with access keys — long strings that work forever, sit in a settings page or a Kubernetes Secret, and are just as useful to anyone who copies them. I replaced them with identity: the pipeline and the workload each prove who they are at the moment they run, and get a credential that expires in minutes. Over 120 standing keys stopped existing.</p>
+
+  <p class="scope"><strong>Scope and ownership.</strong> Earlier role, second half of 2021 into 2022 — this was before GitHub Actions could federate to AWS at all, which is what made it possible. <strong>Two of us on the DevOps side, supporting four application teams.</strong> I owned the identity design and the migration: the trust policies, the per-workload roles, the rollout sequence, and the inventory work that told us what was actually using each key. Every team that shipped through those pipelines had to change how their workflow authenticated, so the delivery was as much coordination as configuration.</p>
+
+  <h2>What changed</h2>
+
+  <p><strong>120+ static access keys eliminated</strong>, across the account estate.</p>
+  <p class="method">Method: a count of active access keys in the AWS IAM credential report before the rollout, summed across accounts. The credential report is the artifact — it's the natural thing to have pulled, and it's the same report anyone auditing this would ask for.</p>
+
+  <p><strong>35 services moved onto per-workload identity</strong> via IRSA.</p>
+  <p class="method">Method: a count of workloads making AWS API calls, taken from the service inventory. Not every service needed a role — plenty never called AWS at all. That's what makes 35 a real number rather than a suspiciously round one.</p>
+
+  <p>The security change underneath the counts is that a credential stopped being a thing that could be copied. A leaked access key works until somebody notices and revokes it, which historically means it works for a long time. A federated credential is minted for one run or one pod and expires on its own, so the window where a copy is useful is measured in minutes.</p>
+
+  <h2>How it works</h2>
+
+  <p>Two paths, the same underlying idea: the thing that wants access presents a signed token proving what it is, and AWS decides whether that identity may assume a role. Nothing is stored.</p>
+
+  <figure>
+    <svg viewBox="0 0 680 220" role="img" aria-labelledby="o-title o-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="o-title">Two federated paths replacing stored keys</title>
+      <desc id="o-desc">A GitHub Actions workflow requests an OIDC token from GitHub and presents it to AWS STS, which validates it and returns temporary credentials. Separately, a Kubernetes pod presents its service account token to STS, which validates it against the cluster OIDC provider and returns temporary credentials scoped to that workload's role. In both paths nothing long-lived is stored anywhere.</desc>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="8" y="24" width="140" height="44" rx="6"/>
+        <rect x="8" y="146" width="140" height="44" rx="6"/>
+        <rect x="212" y="24" width="150" height="44" rx="6"/>
+        <rect x="212" y="146" width="150" height="44" rx="6"/>
+        <rect x="428" y="82" width="120" height="50" rx="6"/>
+        <rect x="596" y="82" width="76" height="50" rx="6"/>
+      </g>
+      <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">
+        <text x="78" y="43">CI workflow</text>
+        <text x="78" y="59" font-size="11">no stored secret</text>
+        <text x="78" y="165">pod</text>
+        <text x="78" y="181" font-size="11">service account</text>
+        <text x="287" y="43">GitHub OIDC token</text>
+        <text x="287" y="59" font-size="11">scoped to repo + branch</text>
+        <text x="287" y="165">projected SA token</text>
+        <text x="287" y="181" font-size="11">cluster OIDC provider</text>
+        <text x="488" y="102">AWS STS</text>
+        <text x="488" y="118" font-size="11">checks aud + sub</text>
+        <text x="634" y="102">role</text>
+        <text x="634" y="118" font-size="11">minutes</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M148 46 L 210 46"/>
+        <path d="M148 168 L 210 168"/>
+        <path d="M362 46 L 396 46 L 396 98 L 426 98"/>
+        <path d="M362 168 L 396 168 L 396 116 L 426 116"/>
+        <path d="M548 107 L 594 107"/>
+      </g>
+      <g fill="currentColor">
+        <path d="M210 46 l -7 -3.5 v 7 z"/>
+        <path d="M210 168 l -7 -3.5 v 7 z"/>
+        <path d="M426 98 l -7 -3.5 v 7 z"/>
+        <path d="M426 116 l -7 -3.5 v 7 z"/>
+        <path d="M594 107 l -7 -3.5 v 7 z"/>
+      </g>
+    </svg>
+    <figcaption>Both paths end at the same question: does this identity, proven right now, get to assume this role?</figcaption>
+  </figure>
+
+  <p>For pipelines, the workflow asks GitHub for a token and hands it to AWS. The only thing the repository holds is the name of a role — not a credential:</p>
+
+  <div class="artifact">
+<pre><code><span class="c-key">permissions</span>:
+  <span class="c-key">id-token</span>: write        <span class="c-com"># lets the job request an OIDC token</span>
+  <span class="c-key">contents</span>: read
+
+<span class="c-com"># ...</span>
+
+- <span class="c-key">name</span>: Configure AWS credentials
+  <span class="c-key">uses</span>: aws-actions/configure-aws-credentials@v4
+  <span class="c-key">with</span>:
+    <span class="c-key">role-to-assume</span>: ${{ vars.IAM_ROLE }}   <span class="c-com"># a role ARN, not a key</span>
+    <span class="c-key">role-session-name</span>: GitHubActionsRoleSession
+    <span class="c-key">aws-region</span>: ${{ env.AWS_REGION }}</code></pre>
+  </div>
+
+  <p>For workloads, the pod presents its service account token and the trust policy decides. This is where the care goes, because a trust policy is the actual security boundary — the permissions attached to a role only matter once you've decided who may assume it. Two conditions have to be pinned: the audience, and the subject naming the exact service account.</p>
+
+  <div class="artifact">
+<pre><code><span class="c-com"># Audience: the token must have been minted for STS.</span>
+<span class="c-key">condition</span> {
+  test     = <span class="c-key">"StringEquals"</span>
+  variable = <span class="c-key">"${local.oidc_issuer}:aud"</span>
+  values   = [<span class="c-key">"sts.amazonaws.com"</span>]
+}
+
+<span class="c-com"># Subject: this ONE ServiceAccount, in this ONE namespace.</span>
+<span class="c-com"># Anything looser — a wildcard, or only the namespace — lets every</span>
+<span class="c-com"># other pod in that namespace assume the role too.</span>
+<span class="c-key">condition</span> {
+  test     = <span class="c-key">"StringEquals"</span>
+  variable = <span class="c-key">"${local.oidc_issuer}:sub"</span>
+  values   = [<span class="c-key">"system:serviceaccount:&lt;namespace&gt;:&lt;serviceaccount&gt;"</span>]
+}</code></pre>
+  </div>
+
+  <p>The subject condition is the line worth reading twice. Written with a wildcard it still works — tests pass, the pipeline goes green — while quietly granting the role to every pod that shares the namespace. That asymmetry is why this work rewards being slow: a leaked key eventually announces itself, but a trust policy that is broader than intended looks exactly like one that isn't.</p>
+
+  <!--
+    No "what went wrong" beat — owner decision 2026-08-16. There is no project
+    story file behind this page (portfolio/projects/ holds only the four
+    current-role stories), so there was no incident to convert, and inventing
+    one for a security migration is the kind of detail that collapses under a
+    follow-up. Beats above are grounded in resume.md and facts.md.
+
+    If it is ever added: do NOT use the wildcard-trust-policy catch. facts.md
+    attributes that to reviewing an AI-drafted policy, and its timeline table
+    puts all AI work in the current role only (Claude Code, early 2025) —
+    dating it to 2021-22 would contradict the other pages.
+  -->
+
+  <footer>
+    <a href="./">All projects</a> · <a href="../">Home</a>
+  </footer>
+
+</div>
+</body>
+</html>

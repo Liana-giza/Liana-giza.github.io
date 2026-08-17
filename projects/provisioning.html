@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Making environments something teams create themselves</title>
+<meta name="description" content="Reusable Terraform modules across 15 AWS accounts — turning a two-day manual runbook into a self-service environment build under an hour.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="./">&larr; Projects</a>
+
+  <h1 class="name">Making environments something teams create themselves</h1>
+
+  <h2>What it is</h2>
+  <p class="lede">Standing up a new environment used to mean a person working through a written runbook — networking, permissions, cluster add-ons, secrets wiring — with hand-offs between people at several points. It took about two days, most of which was waiting. I turned it into a set of reusable modules a product team runs themselves, and the same build now takes under an hour.</p>
+
+  <p class="scope"><strong>Scope and ownership.</strong> Platform team of six engineers and a manager, supporting four product teams across 15+ AWS accounts. I owned the module layer — the network and cluster modules, the per-environment composition, and the pipeline that applies them. <strong>In use since late 2023 — every environment built since has come from them.</strong> What each team then builds inside their environment is theirs; my job stopped at handing over something consistent to build on.</p>
+
+  <h2>What changed</h2>
+
+  <p>A new environment went from <strong>about two days to under an hour</strong>.</p>
+  <p class="method">Method: wall-clock from <code>terraform apply</code> to a namespace serving traffic, averaged over the last three environment builds. The old two days were not compute time — they were hand-offs. Networking, IAM roles, cluster add-ons and secrets wiring each sat in a different person's queue.</p>
+
+  <p>The same modules build <strong>every environment across 15+ accounts</strong>.</p>
+  <p class="method">Method: the account count is the AWS Organizations tree — three environments across four product and platform domains, plus shared services, security tooling, log archive and networking. It's 15 or 16 depending on whether sandbox accounts are counted, so I say 15+.</p>
+
+  <p>The change that mattered more than the time saved is that differences between environments became <em>declared</em>. When each environment is built from the same modules with different variables, staging differing from production is a line someone wrote on purpose — not something that accumulated while nobody was looking. Most of the incidents that start with "but it worked in staging" are really this problem.</p>
+
+  <h2>How it works</h2>
+
+  <p>One set of modules; one composition per environment, each with its own state backend and variables. Applied through CI, never from a laptop.</p>
+
+  <figure>
+    <svg viewBox="0 0 680 230" role="img" aria-labelledby="pv-title pv-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="pv-title">Shared modules composed per environment</title>
+      <desc id="pv-desc">A shared set of modules — network, cluster, and identity — is composed once per environment. Each environment has its own variables file and its own state backend. A pull request runs a plan, and a merge applies it through CI, producing the development, staging, and production environments from the same module code.</desc>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="8" y="80" width="132" height="70" rx="6"/>
+        <rect x="212" y="80" width="140" height="70" rx="6"/>
+        <rect x="424" y="18" width="120" height="42" rx="6"/>
+        <rect x="424" y="94" width="120" height="42" rx="6"/>
+        <rect x="424" y="170" width="120" height="42" rx="6"/>
+      </g>
+      <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">
+        <text x="74" y="105">modules</text>
+        <text x="74" y="122" font-size="11">network · cluster</text>
+        <text x="74" y="137" font-size="11">identity</text>
+        <text x="282" y="105">composed per env</text>
+        <text x="282" y="122" font-size="11">own variables</text>
+        <text x="282" y="137" font-size="11">own state backend</text>
+        <text x="484" y="44">dev</text>
+        <text x="484" y="120">staging</text>
+        <text x="484" y="196">production</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M140 115 L 210 115"/>
+        <path d="M352 115 L 388 115 L 388 39 L 422 39"/>
+        <path d="M352 115 L 422 115"/>
+        <path d="M352 115 L 388 115 L 388 191 L 422 191"/>
+      </g>
+      <g fill="currentColor">
+        <path d="M210 115 l -7 -3.5 v 7 z"/>
+        <path d="M422 39 l -7 -3.5 v 7 z"/>
+        <path d="M422 115 l -7 -3.5 v 7 z"/>
+        <path d="M422 191 l -7 -3.5 v 7 z"/>
+      </g>
+      <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.5" font-style="italic" text-anchor="middle">
+        <text x="282" y="168">PR plans · merge applies</text>
+      </g>
+    </svg>
+    <figcaption>The same module code produces every environment. What differs between them is a variables file, which means the difference is reviewable.</figcaption>
+  </figure>
+
+  <p>Two decisions on that path are worth stating, because both traded convenience for something else.</p>
+
+  <p><strong>Non-production doesn't get a NAT gateway unless it asks for one.</strong> A NAT gateway is roughly $32 a month before data processing charges, per gateway, per environment — the kind of cost that isn't worth a conversation individually and is worth real money across an estate. Making it an optional resource gated on a variable means dev and staging run without one by default, and an environment that genuinely needs egress declares it.</p>
+
+  <p><strong>The cluster does not hand admin rights to whoever created it.</strong> AWS will, by default, grant cluster-admin to the identity that ran the create — which in a CI-provisioned world is a pipeline role, and it's a grant nobody chose and no one can see in the manifests. Turning it off means every administrative grant has to be written down explicitly:</p>
+
+  <div class="artifact">
+<pre><code><span class="c-com"># Access entries only — no aws-auth ConfigMap.</span>
+<span class="c-key">access_config</span> {
+  authentication_mode                         = <span class="c-key">"API"</span>
+
+  <span class="c-com"># Declining the automatic admin grant. Whoever ran `apply` should not</span>
+  <span class="c-com"># silently become cluster-admin; every grant is an explicit access entry.</span>
+  bootstrap_cluster_creator_admin_permissions = <span class="c-key">false</span>
+}</code></pre>
+  </div>
+
+  <p>Subnets are built per availability zone from one variable, and carry the tags the load balancer controller discovers them by — the sort of detail that is invisible when it's right and produces a very confusing afternoon when it's missing:</p>
+
+  <div class="artifact">
+<pre><code><span class="c-key">resource</span> <span class="c-key">"aws_subnet"</span> <span class="c-key">"public"</span> {
+  count             = length(var.azs)          <span class="c-com"># one per AZ, 3 by default</span>
+  availability_zone = var.azs[count.index]
+  cidr_block        = local.public_subnet_cidrs[count.index]
+
+  tags = merge(
+    {
+      Name                                        = <span class="c-key">"${var.name}-${var.environment}-public-${count.index + 1}"</span>
+      <span class="c-com"># How the AWS load balancer controller finds where to put</span>
+      <span class="c-com"># public load balancers. Untagged subnets fail silently.</span>
+      <span class="c-key">"kubernetes.io/role/elb"</span>                    = <span class="c-key">"1"</span>
+      <span class="c-key">"kubernetes.io/cluster/${var.cluster_name}"</span> = <span class="c-key">"shared"</span>
+    },
+    var.tags,
+  )
+}</code></pre>
+  </div>
+
+  <h2>What went wrong</h2>
+
+  <p>A module hardcoded its storage class, and the assumption held right up until it didn't.</p>
+
+  <p><code>gp3</code> is the correct default — newer, cheaper, faster than what came before, and the right choice for anything built recently. So it went into the module as a constant rather than a variable, and every environment built from that module worked. Then it was pointed at an older cluster that didn't have that storage class available, and the persistent volume claims simply sat in <code>Pending</code>. Nothing errored. The workload just never started, waiting for storage that was never going to be provisioned.</p>
+
+  <p>The failure is specific to the thing that makes shared modules valuable. A module encodes decisions so that nobody has to make them again — which is exactly the point, and also means a decision that isn't universally true gets propagated everywhere with confidence. The wider the reuse, the further a wrong assumption travels before anyone questions it.</p>
+
+  <p>I'd standardize on one storage class again; that call was right. What I'd change is the difference between a default and a constant. A default expresses "this is what you want unless you know otherwise" and can be overridden at the edge where someone knows otherwise. A constant expresses "this is always true," which for infrastructure assumptions is a claim worth being suspicious of. It's now a variable with <code>gp3</code> as its default, and the behaviour in the common case is identical.</p>
+
+  <footer>
+    <a href="./">All projects</a> · <a href="../">Home</a>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liana Gizatulina — the short version</title>
+<meta name="description" content="Platform engineer, 5+ years of AWS and Kubernetes. The short version: what I do, the stack, the numbers, how to reach me.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="./">&larr; Liana Gizatulina</a>
+
+  <h1 class="name">The short version</h1>
+  <p class="pitch">Platform engineer, 5+ years of AWS and Kubernetes, building the internal platforms product teams ship on — provisioning, delivery, reliability. Currently the person figuring out how AI agents fit into platform operations without handing them production.</p>
+
+  <p class="meta">
+    <a class="btn" href="resume.pdf">Resume (PDF)</a>
+    <a href="https://linkedin.com/in/liana-gizatulina">LinkedIn</a>
+    <a href="mailto:liana.gizatulina@gmail.com">liana.gizatulina@gmail.com</a>
+  </p>
+
+  <h2>Now</h2>
+  <p class="role-line">Platform Engineer · 2023 &ndash; present · remote</p>
+  <ul class="tight">
+    <li>Built an MCP suite that investigates incidents across 50 services and proposes fixes as pull requests — triage from 11 manual steps to 4.</li>
+    <li>Rolled out AI-assisted PR review across 30 repos — every PR checked against its ticket, catching requirement gaps and exposed secrets before merge.</li>
+    <li>Reusable Terraform modules across 15 AWS accounts — self-service environment provisioning, 2 days down to under an hour.</li>
+    <li>EKS and GitOps delivery for 4 product teams — 15+ production deployments a day, standardized rollout and one-click rollback.</li>
+    <li>HA Prometheus/Grafana/Alertmanager for 50 services — a 99.9% availability SLO with burn-rate alerting cut alert noise ~50% and MTTR from 45 to 15 minutes.</li>
+  </ul>
+
+  <h2>Before</h2>
+  <p class="role-line">DevOps Engineer · 2021 &ndash; 2023 · Chicago, IL</p>
+  <ul class="tight">
+    <li>Replaced static AWS credentials across CI and workloads — OIDC federation for pipelines, IRSA for 35 EKS services; eliminated 120+ static keys.</li>
+    <li>Built the VPC layer three environments and 35 EKS workloads ran on — subnets across 3 AZs, IGW/NAT routing, service-scoped security groups instead of CIDR allowlists.</li>
+    <li>Cut non-prod spend by gating NAT gateways per environment and tagging for cost allocation.</li>
+    <li>Standardized CI/CD on reusable GitHub Actions workflows across 4 application teams.</li>
+  </ul>
+
+  <h2>Stack at a glance</h2>
+  <dl class="stack">
+    <dt>Cloud &amp; infrastructure</dt>
+    <dd>AWS (EC2, VPC, IAM, S3, RDS, Lambda, EKS), Linux, Docker, Kubernetes</dd>
+    <dt>IaC &amp; delivery</dt>
+    <dd>Terraform, Helm, Argo CD, GitOps, GitHub Actions</dd>
+    <dt>Observability &amp; reliability</dt>
+    <dd>Prometheus, Grafana, Alertmanager, CloudWatch, SLOs/SLIs, error budgets, incident response</dd>
+    <dt>Security &amp; identity</dt>
+    <dd>IAM, OIDC, IRSA, Kubernetes RBAC, AWS Secrets Manager, Secrets Store CSI Driver</dd>
+    <dt>AI / agentic</dt>
+    <dd>Claude Code, Model Context Protocol (MCP), agentic workflows, AI-assisted incident response and PR review</dd>
+    <dt>Scripting</dt>
+    <dd>Bash, Python</dd>
+  </dl>
+
+  <h2>Certification</h2>
+  <p>Certified Kubernetes Application Developer (CKAD) — CNCF / Linux Foundation</p>
+
+  <footer>
+    Got ten minutes instead? <a href="projects/">Read a project end to end.</a>
+  </footer>
+
+</div>
+</body>
+</html>

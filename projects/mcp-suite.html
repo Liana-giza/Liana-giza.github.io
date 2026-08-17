@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI incident triage, without giving the agent production access</title>
+<meta name="description" content="An AI ops layer that investigates incidents across 50 services and proposes fixes as pull requests — holding no cluster write access and no permission to merge.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="./">&larr; Projects</a>
+
+  <h1 class="name">AI incident triage, without giving the agent production access</h1>
+
+  <h2>What it is</h2>
+  <p class="lede">An AI assistant that can investigate a production incident across metrics, cluster state, and logs — and then propose a fix as a pull request. It holds no credentials to change anything itself. A person reviews the pull request, and the normal deployment pipeline applies it.</p>
+
+  <p class="scope"><strong>Scope and ownership.</strong> Platform team of six engineers and a manager, supporting four product teams and around 50 services. I owned this end to end — the capability split, the tool design, the credential scoping, and the safety model. <strong>In production since early 2026 — about six months.</strong> The delivery pipeline it proposes into was already ours, shared across the team.</p>
+
+  <h2>What changed</h2>
+
+  <p>Triage on a production-like incident went from <strong>11 manual steps to 4</strong>, and from <strong>roughly 22 minutes to 8</strong>.</p>
+  <p class="method">Method: one incident, timed both ways — the manual path across Grafana, <code>kubectl</code>, and logs, against the same investigation run through the tools. A single measured incident, not an average across many.</p>
+
+  <p>Remediation moved from "someone writes the manifest change by hand" to a reviewed pull request the agent drafts.</p>
+  <p class="method">Method: the mechanism is the claim here, not a hit rate. Every proposal is a pull request an engineer reads and decides on, so the number that matters is how many reach production without review — which is zero, by construction.</p>
+
+  <h2>How it works</h2>
+
+  <p>Two servers, split by what they are allowed to do. That split is the safety boundary — it isn't a deployment detail.</p>
+
+  <figure>
+    <svg viewBox="0 0 680 260" role="img" aria-labelledby="diagram-title diagram-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="diagram-title">Read and write paths, separated</title>
+      <desc id="diagram-desc">The assistant reaches the read server, which queries Prometheus, Kubernetes state, and bounded logs using a read-only service account. Separately, the assistant reaches the action server, which holds no cluster credentials and can only open a GitHub pull request. A human reviews and merges that pull request, and only then does the delivery pipeline apply the change to the cluster.</desc>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="8" y="104" width="104" height="46" rx="6"/>
+        <rect x="168" y="26" width="128" height="46" rx="6"/>
+        <rect x="168" y="182" width="128" height="46" rx="6"/>
+        <rect x="360" y="26" width="140" height="46" rx="6"/>
+        <rect x="360" y="182" width="140" height="46" rx="6"/>
+        <rect x="548" y="104" width="124" height="46" rx="6"/>
+      </g>
+      <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" text-anchor="middle">
+        <text x="60" y="124">Engineer</text>
+        <text x="60" y="140">+ assistant</text>
+        <text x="232" y="45">read server</text>
+        <text x="232" y="61" font-size="11">read-only service account</text>
+        <text x="232" y="201">action server</text>
+        <text x="232" y="217" font-size="11">no cluster credentials</text>
+        <text x="430" y="45">Prometheus · K8s state</text>
+        <text x="430" y="61" font-size="11">bounded logs</text>
+        <text x="430" y="201">GitHub pull request</text>
+        <text x="430" y="217" font-size="11">human reviews, then merges</text>
+        <text x="610" y="124">cluster</text>
+        <text x="610" y="140" font-size="11">pipeline applies</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M112 118 L 150 118 L 150 49 L 166 49"/>
+        <path d="M112 136 L 150 136 L 150 205 L 166 205"/>
+        <path d="M296 49 L 358 49"/>
+        <path d="M296 205 L 358 205"/>
+        <path d="M500 205 L 524 205 L 524 127 L 546 127"/>
+      </g>
+      <g fill="currentColor">
+        <path d="M166 49 l -7 -3.5 v 7 z"/>
+        <path d="M166 205 l -7 -3.5 v 7 z"/>
+        <path d="M358 49 l -7 -3.5 v 7 z"/>
+        <path d="M358 205 l -7 -3.5 v 7 z"/>
+        <path d="M546 127 l -7 -3.5 v 7 z"/>
+      </g>
+      <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-style="italic">
+        <text x="510" y="150">no path from the agent</text>
+        <text x="510" y="165">directly to the cluster</text>
+      </g>
+    </svg>
+    <figcaption>The agent can read the platform and it can open a pull request. There is no edge between the agent and the cluster.</figcaption>
+  </figure>
+
+  <p>The decision that mattered was choosing pull-request proposals over a direct <code>apply</code> tool. A direct-apply tool is easier to build and much nicer to demo — you ask, and the thing changes. But it needs live cluster write credentials, it bypasses code review, and it quietly creates a second deployment path alongside the reviewed one. That second path is the actual risk: not that the agent is wrong, but that changes start reaching production through a route nobody is watching. So the agent never got that power.</p>
+
+  <p>The same reasoning shapes the tools themselves. Every parameter that policy should decide is decided in the server, not passed in by the caller — so the tool signature <em>is</em> the policy, and a compromised or misled client cannot widen it:</p>
+
+  <div class="artifact">
+<pre><code><span class="c-com"># The registry prefix and namespace are fixed here, not accepted as arguments.</span>
+<span class="c-com"># A caller chooses the image tag and nothing else.</span>
+NAMESPACE = os.environ.get(<span class="c-key">"MCP_MUTATING_NS"</span>, <span class="c-key">"mcp-sandbox"</span>)
+REGISTRY_PREFIX = os.environ[<span class="c-key">"MCP_MUTATING_REGISTRY_PREFIX"</span>]
+
+<span class="c-com"># Rejects '/', ':' and '@' — so a tag can never rewrite the registry prefix</span>
+<span class="c-com"># into a different repository or pin a foreign digest.</span>
+TAG_RE = re.compile(<span class="c-key">r"^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$"</span>)
+
+<span class="c-key">@mcp.tool()</span>
+<span class="c-key">def</span> create_test_pod(image_tag: str) -&gt; str:
+    <span class="c-key">if not</span> TAG_RE.match(image_tag):
+        <span class="c-key">return</span> f<span class="c-key">"REFUSED: '{image_tag}' is not a valid image tag."</span>
+    <span class="c-com"># serviceAccountName deliberately omitted, and the token automount</span>
+    <span class="c-com"># disabled: the pod it creates holds no API credentials at all.</span>
+    spec = V1PodSpec(automount_service_account_token=<span class="c-key">False</span>, ...)</code></pre>
+  </div>
+
+  <p>Four read tools cover the investigation surface: a metrics query, workload status, cluster events, and pod logs bounded by namespace, a fifteen-minute window, and a line count. Logs are the widest data-exposure surface in the set, so they are the most tightly bounded.</p>
+
+  <h2>What went wrong</h2>
+
+  <p>The first version of the write tool accepted a repository path from the model.</p>
+
+  <p>It read naturally — the agent decides which file to change, the tool changes it — and it would have worked fine for the cases I had in mind. It also meant that anything able to influence the model's reasoning could point the tool at a file I had never considered: a shared platform manifest, a CI workflow, the deployment configuration itself. Logs and metric labels are attacker-influenced data; treating them as evidence is fine, but I had built a path from that evidence to a file path with no trusted step in between.</p>
+
+  <p>I replaced it with a server-side map from a service name to the paths that belong to it. The model expresses intent — <em>this service, this kind of change</em> — and trusted code resolves what that means on disk. Anything outside the map is refused rather than negotiated.</p>
+
+  <p>Structurally, that is the rule the rest of the design follows: <strong>the model expresses intent; trusted code resolves the target.</strong> It's why the registry prefix and namespace are pinned server-side rather than passed in, and why the delete tool refuses to touch anything it did not create. I would not make the original call again — a tool signature is a security boundary, and I had written that one as a convenience.</p>
+
+  <footer>
+    <a href="./">All projects</a> · <a href="../">Home</a>
+  </footer>
+
+</div>
+</body>
+</html>

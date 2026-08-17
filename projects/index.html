@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects — Liana Gizatulina</title>
+<meta name="description" content="Platform engineering projects: what each one does, what changed because of it, how it works, and what went wrong.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="../">&larr; Liana Gizatulina</a>
+
+  <h1 class="name">Projects</h1>
+  <p class="pitch">Each page covers the same five things: what it is, what I owned, what changed, how it works, and what went wrong. The last one is the part most portfolios leave out, so it's where I'd start if you only read one section.</p>
+
+  <!--
+    concept.md: "The index lists only pages that exist; no placeholder tiles,
+    no 'coming soon.'" Quality gate: no page goes live without all five beats,
+    a diagram, and its artifact.
+
+    Strength order, extending the four from concept.md:
+      1. MCP suite            -> mcp-suite.html
+      2. Provisioning         -> provisioning.html
+      3. EKS observability    -> eks-observability.html
+      4. Secrets CSI          -> secrets-csi.html
+      5. AI PR review         -> ai-pr-review.html
+      6. OIDC / IRSA          -> oidc-irsa.html   (four beats, no "what went
+                                 wrong" — owner decision 2026-08-16)
+
+    Only the OIDC page departs from the concept.md quality gate. The brief
+    still states the gate as all five beats; that inconsistency is open.
+  -->
+
+  <ul class="doors">
+    <li>
+      <a class="door" href="mcp-suite.html">
+        <p class="door-label">AI incident triage, without giving the agent production access</p>
+        <p class="door-note">An assistant that investigates incidents across 50 services and proposes fixes as pull requests — holding no cluster credentials and no permission to merge.</p>
+      </a>
+    </li>
+    <li>
+      <a class="door" href="provisioning.html">
+        <p class="door-label">Making environments something teams create themselves</p>
+        <p class="door-note">Reusable Terraform modules across 15+ AWS accounts — a two-day manual runbook turned into a self-service build under an hour.</p>
+      </a>
+    </li>
+    <li>
+      <a class="door" href="eks-observability.html">
+        <p class="door-label">Giving a platform a reliability number it could defend</p>
+        <p class="door-note">A 99.9% availability SLO, an error budget people could actually see, and alerts worth waking up for.</p>
+      </a>
+    </li>
+    <li>
+      <a class="door" href="secrets-csi.html">
+        <p class="door-label">Moving live apps off plain Kubernetes Secrets</p>
+        <p class="door-note">A migration under production traffic — a scoped IAM role per app, and not one line of application code changed.</p>
+      </a>
+    </li>
+    <li>
+      <a class="door" href="ai-pr-review.html">
+        <p class="door-label">A second reviewer on every pull request</p>
+        <p class="door-note">An AI first pass that checks each diff against its ticket's acceptance criteria — advisory by design, never a merge gate.</p>
+      </a>
+    </li>
+    <li>
+      <a class="door" href="oidc-irsa.html">
+        <p class="door-label">Taking the long-lived AWS keys away</p>
+        <p class="door-note">Replacing static credentials in pipelines and workloads with federated identity — 120+ standing access keys eliminated.</p>
+      </a>
+    </li>
+  </ul>
+
+</div>
+</body>
+</html>

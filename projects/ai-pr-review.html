@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A second reviewer on every pull request</title>
+<meta name="description" content="An AI first-pass reviewer that checks each pull request against its ticket's acceptance criteria and flags genuine risk — advisory by design, never a merge gate.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="./">&larr; Projects</a>
+
+  <h1 class="name">A second reviewer on every pull request</h1>
+
+  <h2>What it is</h2>
+  <p class="lede">An automated reviewer that reads every pull request, compares what changed against what the ticket actually asked for, and leaves one comment saying where those two things disagree. It also flags the security problems that are easy to miss in a diff. It never blocks a merge — a person still decides.</p>
+
+  <p class="scope"><strong>Scope and ownership.</strong> Platform team of six engineers and a manager, supporting four product teams. I did not build the underlying action — that's Anthropic's, off the shelf. What I built is the review itself: what it looks for, what it deliberately ignores, how it gets the ticket, and the shape of the output. The distinction matters, and I'd rather state it than have it found.</p>
+
+  <h2>What changed</h2>
+
+  <p>Every pull request now gets a first-pass review before a human opens it.</p>
+  <p class="method">Method: coverage is the honest claim here. Every PR is reviewed because the trigger fires on every PR — that's a property of the wiring, not a measurement. I never instrumented reviewer time saved, so I don't quote a number for it.</p>
+
+  <p>The motivating problem was that AI-assisted development had made writing code much faster without making reviewing it any faster. Review became the bottleneck. This takes the mechanical part of the first pass — did the diff do what the ticket said, are there obvious risks — so a human starts from a shorter list.</p>
+
+  <p class="method">The gap I'd close first: I never measured a false-positive rate. "Engineers quietly stopped reading it" is the failure mode that kills tools like this, and I have no instrument that would have told me it was happening. Sampling fifty reviews and labelling them by hand is what I'd do before expanding it further.</p>
+
+  <h2>How it works</h2>
+
+  <p>The workflow runs when a pull request is opened, resolves the ticket key from the PR description, fetches that ticket, reads the diff, and posts a single comment in three fixed sections: line-level findings, a requirements checklist, and a verdict.</p>
+
+  <figure>
+    <svg viewBox="0 0 680 200" role="img" aria-labelledby="p-title p-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="p-title">What happens when a pull request opens</title>
+      <desc id="p-desc">Opening a pull request triggers the workflow. The workflow fetches the linked ticket from Jira and reads the diff, passes both to the review model, and the model posts exactly one comment on the pull request. The comment is advisory: a human reviewer decides, and the deterministic checks such as tests and linters remain the blocking gate.</desc>
+      <g fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="8" y="70" width="120" height="46" rx="6"/>
+        <rect x="182" y="18" width="132" height="42" rx="6"/>
+        <rect x="182" y="124" width="132" height="42" rx="6"/>
+        <rect x="368" y="70" width="132" height="46" rx="6"/>
+        <rect x="554" y="70" width="118" height="46" rx="6"/>
+      </g>
+      <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">
+        <text x="68" y="90">PR opened</text>
+        <text x="68" y="106" font-size="11">not on every push</text>
+        <text x="248" y="35">the ticket</text>
+        <text x="248" y="50" font-size="11">acceptance criteria</text>
+        <text x="248" y="141">the diff</text>
+        <text x="248" y="156" font-size="11">what actually changed</text>
+        <text x="434" y="90">review</text>
+        <text x="434" y="106" font-size="11">one comment, three sections</text>
+        <text x="613" y="90">a human decides</text>
+        <text x="613" y="106" font-size="11">advisory, never a gate</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <path d="M128 84 L 155 84 L 155 39 L 180 39"/>
+        <path d="M128 102 L 155 102 L 155 145 L 180 145"/>
+        <path d="M314 39 L 340 39 L 340 86 L 366 86"/>
+        <path d="M314 145 L 340 145 L 340 100 L 366 100"/>
+        <path d="M500 93 L 552 93"/>
+      </g>
+      <g fill="currentColor">
+        <path d="M180 39 l -7 -3.5 v 7 z"/>
+        <path d="M180 145 l -7 -3.5 v 7 z"/>
+        <path d="M366 86 l -7 -3.5 v 7 z"/>
+        <path d="M366 100 l -7 -3.5 v 7 z"/>
+        <path d="M552 93 l -7 -3.5 v 7 z"/>
+      </g>
+    </svg>
+    <figcaption>Triggering on open rather than on every push is a cost decision with a known cost of its own — see below.</figcaption>
+  </figure>
+
+  <p>Three decisions shaped it, and each one traded something away.</p>
+
+  <p><strong>Advisory, not a required check.</strong> A non-deterministic reviewer should not hold the merge button. Two reasons: the fastest way to make engineers resent a tool is to have it block them on a false positive, and a required check implies a guarantee a model cannot make. The deterministic checks — tests, linters, scanners — stay blocking. This one is a second pair of eyes.</p>
+
+  <p><strong>It runs when a PR opens, not on every push.</strong> Re-running on every commit multiplies spend with no proportional benefit. The cost I accepted is that the review goes stale after the first round of fixes, so it never sees problems introduced by responding to its own feedback. If spend weren't a constraint I'd run it on ready-for-review plus explicit re-request.</p>
+
+  <p><strong>The prompt lives inline in the workflow</strong> rather than being read from a file at runtime, so changing the review contract requires a merge to the default branch like any other protected change. Single-sourcing the content across repos through a generator keeps the copies identical without weakening that boundary.</p>
+
+  <p>The part that took the most iteration wasn't what to catch — it was what to stay quiet about:</p>
+
+  <div class="artifact">
+<pre><code><span class="c-com">FLAG (worth a comment):</span>
+  - IAM not least-privilege: wildcard actions/resources, IRSA trust
+    policies not scoped to a specific ServiceAccount.
+  - Hardcoded secrets, credentials, tokens, or keys.
+  - Over-open security groups (0.0.0.0/0 on sensitive ports).
+  - Mutable image tags (:latest) — non-reproducible, breaks rollback.
+  - Injection: untrusted input reaching raw SQL, shell commands,
+    file paths, or templates without parameterization or escaping.
+  - Broken authz: a handler acting on a record without verifying
+    the caller owns it; trusting a client-supplied role or price.
+  - Anything that violates the ticket's acceptance criteria.
+
+<span class="c-com">IGNORE (do NOT comment — linters and formatters own these):</span>
+  - Style, formatting, indentation, naming, import order.
+  - Subjective preferences. Missing or typo'd comments.
+  - AWS account IDs in ARNs <span class="c-com">— they are not secrets, and IRSA</span>
+    <span class="c-com">role-ARN annotations always contain one. Standard pattern,</span>
+    <span class="c-com">not a finding.</span></code></pre>
+  </div>
+
+  <h2>What went wrong</h2>
+
+  <p>The first version commented on everything it noticed, and that nearly killed it.</p>
+
+  <p>A reviewer that flags a naming inconsistency in the same voice it flags a wildcard IAM policy teaches people that most of what it says is skippable — and once someone is scrolling past its comments, they scroll past the one that mattered too. The tool wasn't wrong. It was noisy, which in review tooling is the same thing as being wrong, just slower-acting.</p>
+
+  <p>The fix was to write the silence down. An explicit IGNORE list names what the reviewer must never comment on, on the grounds that linters and formatters already own those and do it deterministically. The AWS account ID entry is the one I'd point at: account IDs look like secrets, and a security-minded reviewer flags them every time — but IRSA role annotations always contain one, so flagging it means crying wolf on the standard pattern in nearly every infrastructure PR.</p>
+
+  <p>I'd make the same call again, because you cannot calibrate this before seeing real output — the first version has to be over-eager so you can find out which of its instincts are wrong. What I'd change is treating the IGNORE list as a first-class part of the review contract from the start, rather than something bolted on once engineers started ignoring the bot.</p>
+
+  <footer>
+    <a href="./">All projects</a> · <a href="../">Home</a>
+  </footer>
+
+</div>
+</body>
+</html>
