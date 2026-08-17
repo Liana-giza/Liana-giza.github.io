@@ -37,8 +37,8 @@
       <desc id="diagram-desc">The assistant reaches the read server, which queries Prometheus, Kubernetes state, and bounded logs using a read-only service account. Separately, the assistant reaches the action server, which holds no cluster credentials and can only open a GitHub pull request. A human reviews and merges that pull request, and only then does the delivery pipeline apply the change to the cluster.</desc>
       <g fill="none" stroke="currentColor" stroke-width="1.5">
         <rect x="8" y="104" width="104" height="46" rx="6"/>
-        <rect x="168" y="26" width="128" height="46" rx="6"/>
-        <rect x="168" y="182" width="128" height="46" rx="6"/>
+        <rect class="n-read" x="168" y="26" width="128" height="46" rx="6"/>
+        <rect class="n-act" x="168" y="182" width="128" height="46" rx="6"/>
         <rect x="360" y="26" width="140" height="46" rx="6"/>
         <rect x="360" y="182" width="140" height="46" rx="6"/>
         <rect x="548" y="104" width="124" height="46" rx="6"/>
@@ -76,6 +76,10 @@
         <text x="510" y="165">directly to the cluster</text>
       </g>
     </svg>
+    <div class="legend">
+      <span class="ok">holds a read-only cluster identity</span>
+      <span class="bad">holds no cluster credentials at all</span>
+    </div>
     <figcaption>The agent can read the platform and it can open a pull request. There is no edge between the agent and the cluster.</figcaption>
   </figure>
 

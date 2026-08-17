@@ -27,6 +27,24 @@
   <p><strong>35 services moved onto per-workload identity</strong> via IRSA.</p>
   <p class="method">Method: a count of workloads making AWS API calls, taken from the service inventory. Not every service needed a role — plenty never called AWS at all. That's what makes 35 a real number rather than a suspiciously round one.</p>
 
+  <figure class="viz">
+    <div class="compare" role="img" aria-label="Standing access keys went from over 120 to zero. Credential lifetime went from indefinite to minutes. A leaked credential went from useful until someone revokes it to useful until it expires on its own.">
+      <div class="cmp-row">
+        <span class="cmp-key">standing keys</span>
+        <span class="cmp-val"><span class="chip chip-was">120+</span><span class="arrow">&rarr;</span><span class="chip chip-now">0</span></span>
+      </div>
+      <div class="cmp-row">
+        <span class="cmp-key">credential lifetime</span>
+        <span class="cmp-val"><span class="chip chip-was">indefinite</span><span class="arrow">&rarr;</span><span class="chip chip-now">minutes</span></span>
+      </div>
+      <div class="cmp-row">
+        <span class="cmp-key">a leaked copy is</span>
+        <span class="cmp-val"><span class="chip chip-was">useful until revoked</span><span class="arrow">&rarr;</span><span class="chip chip-now">useful until it expires</span></span>
+      </div>
+    </div>
+    <figcaption>The middle row is the one that matters. Everything else follows from a credential that stops working on its own.</figcaption>
+  </figure>
+
   <p>The security change underneath the counts is that a credential stopped being a thing that could be copied. A leaked access key works until somebody notices and revokes it, which historically means it works for a long time. A federated credential is minted for one run or one pod and expires on its own, so the window where a copy is useful is measured in minutes.</p>
 
   <h2>How it works</h2>

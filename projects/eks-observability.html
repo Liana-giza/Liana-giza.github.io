@@ -27,8 +27,30 @@
   <p>Alert volume fell by <strong>roughly half</strong>, without removing coverage.</p>
   <p class="method">Method: alerts actually delivered by Alertmanager per week, counted before and after. The reduction came from changing what the rules ask, not from deleting rules — the burn-rate conditions still catch the incidents the old thresholds caught. That last part was my judgement call at the time, not something I proved with data.</p>
 
+  <figure class="viz">
+    <div class="bars" role="img" aria-label="Alerts delivered per week roughly halved after replacing static thresholds with burn-rate rules.">
+      <span>before</span><div class="bar bar-before" style="width:100%"></div>
+      <span>after</span><div class="bar bar-after" style="width:50%"></div>
+    </div>
+    <figcaption>Static thresholds fire on a moment. Burn-rate rules fire on a trend, so a spike that recovers in thirty seconds never pages anyone.</figcaption>
+  </figure>
+
   <p>The platform got its first error budget: <strong>about 43 minutes</strong> of unavailability per 30 days, visible to whoever was shipping.</p>
   <p class="method">Method: arithmetic, not measurement. 0.1% of a rolling 30-day window is 43.2 minutes.</p>
+
+  <figure class="viz">
+    <div class="viz-label"><span>a month's error budget at 99.9%</span><span>43.2 min</span></div>
+    <div class="budget" id="budget" role="img" aria-label="Of a 43.2 minute monthly error budget, a 12 minute incident consumed 28 percent, leaving 31.2 minutes.">
+      <div class="budget-spent" id="bSpent" style="width:27.8%">12 min</div>
+      <div class="budget-left" id="bLeft" style="width:72.2%">31.2 min left</div>
+    </div>
+    <div class="budget-control" id="bCtl">
+      <label for="bRange">incident length</label>
+      <input type="range" id="bRange" min="1" max="60" step="1" value="12">
+      <output for="bRange" id="bOut">12 min</output>
+    </div>
+    <figcaption id="bCap">A twelve-minute incident spends roughly a quarter of the month. That is the whole point of measuring a budget rather than counting outages &mdash; it turns "was that bad?" into a number.</figcaption>
+  </figure>
 
   <p>The honest shape of the MTTR number is that almost all of the improvement was in <em>noticing</em> and in <em>knowing where to look</em>. Rollback had always been quick. What changed is that an alert started meaning something specific, and it went to the team that owned the service instead of a channel everyone had learned to ignore.</p>
 
@@ -90,7 +112,7 @@
     <figcaption>Everything is scraped from what the cluster already emits. The only external source is CloudWatch, reached with a scoped role rather than a stored credential.</figcaption>
   </figure>
 
-  <p>Running Prometheus ourselves rather than buying a vendor was the decision worth defending. The signals already existed in Prometheus format — the ingress controller, kube-state-metrics and cAdvisor all expose it natively — so self-managing meant scraping what was already there instead of paying per host to re-ingest it. It also kept retention and cardinality in our hands, which on high-cardinality Kubernetes metrics is exactly where the cost surprises live. The trade is real: we carried the operational burden of the stack, which is what the incident further down is about.</p>
+  <p>Running Prometheus ourselves rather than buying a vendor was the decision worth defending. The signals already existed in Prometheus format — the ingress controller, kube-state-metrics and cAdvisor all expose it natively — so self-managing meant scraping what was already there instead of paying per host to re-ingest it. It also kept retention and cardinality in our hands, which on high-cardinality Kubernetes metrics is exactly where the cost surprises live. The trade is real, and we paid it: we carried the operational burden of the stack ourselves.</p>
 
   <p>Availability is measured over a rolling thirty-day window, counting 5xx as failure and excluding 4xx as client error:</p>
 
@@ -107,22 +129,62 @@ sum(increase(nginx_ingress_controller_requests{
 * <span class="c-key">100</span></code></pre>
   </div>
 
-  <p>Excluding the whole 4xx class is the honest edge in this definition. A 429 we generate under load is our failure, not the client's, and this version counts it as a success. The defensible next step is re-including platform-caused 4xx while keeping genuine 400s and 404s out.</p>
+  <p>Running the stack ourselves has an operational cost, and it arrived during a staging rollout when Alertmanager went into a crash loop — the monitoring failing while it was meant to be watching everything else. The base chart enabled high-availability gossip unconditionally and staging ran a single replica, so it started up hunting for peers that did not exist. IPv6 dual-stack made the failed peer resolution surface immediately, which is why it looked like a networking problem for the first while; it wasn't, it just made the real fault visible faster. The chart fix was small — inject peer arguments only when replicas exceed one — and the change that mattered was a config-validity check in CI, so a rendered config that cannot start now fails before merge instead of at rollout.</p>
 
   <h2>What went wrong</h2>
 
-  <p>Alertmanager went into a crash loop during a staging rollout — the monitoring stack failing while it was supposed to be watching everything else.</p>
+  <p>The SLI counts some of our own failures as successes, and I shipped it that way on purpose.</p>
 
-  <p>I worked through it by comparing the rendered manifests, container arguments, logs, and networking against the environment where it ran fine. The cause was that the base chart enabled high-availability gossip unconditionally, and staging ran a single replica. Alertmanager was starting up, looking for peers that did not exist, and failing loudly. The cluster's IPv6 dual-stack configuration made the failed peer resolution surface immediately rather than as a slow degradation, which is why it looked like a networking problem for the first while. It wasn't; it just made the real fault visible faster.</p>
+  <p>Look at the artifact above: it excludes everything that isn't a 5xx. Treating 4xx as client error is the standard simplification and it's right for most of the class — a 404 for a URL someone mistyped is not a reliability failure, and counting it as one would make the number meaningless in the other direction.</p>
 
-  <p>The fix in the chart was small — inject the peer arguments only when replicas exceed one. The change that mattered was adding a configuration-validity check to CI, so a rendered config that cannot start now fails in the pipeline instead of at rollout. That moved the whole class of bug from "found during deployment" to "found before merge."</p>
+  <p>But a 429 is a 4xx, and a 429 is us. When the platform is under enough load to start rejecting requests, those rejections are our failure and the SLI scores every one of them as a success. Which means the measurement is <em>most optimistic exactly when the platform is least healthy</em> — the error is not random, it's biased in the worst available direction. An SLO that looks best under stress is the specific way a reliability target can lie to you.</p>
 
-  <p>I would take the same path again. Building on an internal chart was the right call for consistency across environments, and the flaw was a defaulting assumption that only shows up when a deployment differs from the one the chart was written for. What I would not repeat is having no automated check that the thing we were about to deploy could actually start.</p>
+  <p>I'd ship the same v1 again, and that isn't a dodge. The platform had no reliability target at all, and a defensible simplification that exists beats a perfect definition still being argued about — you cannot tune alerting against a number nobody has agreed on. What I would change is treating the exclusion as finished rather than provisional. The correction is specific and I can describe it: re-include platform-generated 4xx — our own 429s and any 4xx produced by the ingress rather than the application — while keeping genuine 400s, 401s and 404s out. I knew the bias, and I should have written it into the SLO document next to the target instead of carrying it in my head.</p>
 
   <footer>
     <a href="./">All projects</a> · <a href="../">Home</a>
   </footer>
 
 </div>
+
+<script>
+/* Progressive enhancement only. Without this the budget bar still renders
+   the real incident: 12 minutes of a 43.2 minute month. */
+(function () {
+  var B = 43.2,
+      bar = document.getElementById('budget'),
+      spent = document.getElementById('bSpent'),
+      left = document.getElementById('bLeft'),
+      ctl = document.getElementById('bCtl'),
+      range = document.getElementById('bRange'),
+      out = document.getElementById('bOut'),
+      cap = document.getElementById('bCap'),
+      base = cap.innerHTML;
+
+  function update() {
+    var m = +range.value,
+        pct = Math.min(100, m / B * 100),
+        rem = Math.max(0, B - m),
+        over = m > B;
+
+    spent.style.width = pct + '%';
+    left.style.width = (100 - pct) + '%';
+    spent.textContent = m >= 5 ? m + ' min' : '';
+    left.textContent = rem > 3 ? rem.toFixed(1) + ' min left' : '';
+    out.textContent = m + ' min';
+    bar.classList.toggle('over', over);
+    bar.setAttribute('aria-label',
+      over ? 'An incident of ' + m + ' minutes exhausts the entire monthly error budget of 43.2 minutes.'
+           : 'Of a 43.2 minute monthly error budget, an incident of ' + m + ' minutes consumes ' + Math.round(pct) + ' percent.');
+    cap.innerHTML = over
+      ? 'One incident of that length spends the whole month on its own — which is what a fast-burn alert exists to catch while there is still budget left.'
+      : base;
+  }
+
+  ctl.classList.add('on');
+  range.addEventListener('input', update);
+  update();
+})();
+</script>
 </body>
 </html>

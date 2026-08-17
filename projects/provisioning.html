@@ -24,6 +24,29 @@
   <p>A new environment went from <strong>about two days to under an hour</strong>.</p>
   <p class="method">Method: wall-clock from <code>terraform apply</code> to a namespace serving traffic, averaged over the last three environment builds. The old two days were not compute time — they were hand-offs. Networking, IAM roles, cluster add-ons and secrets wiring each sat in a different person's queue.</p>
 
+  <figure class="viz">
+    <div class="track" role="img" aria-label="The old two-day build was four short pieces of actual work separated by long waits in other people's queues. The new build is one continuous run of under an hour.">
+      <span>before</span>
+      <div class="seg">
+        <i class="work" style="width:5%"></i><i class="wait" style="width:17%"></i>
+        <i class="work" style="width:5%"></i><i class="wait" style="width:19%"></i>
+        <i class="work" style="width:6%"></i><i class="wait" style="width:20%"></i>
+        <i class="work" style="width:5%"></i><i class="wait" style="width:9%"></i>
+        <span class="t">~2 days</span>
+      </div>
+      <span>after</span>
+      <div class="seg">
+        <i class="fast" style="width:4%"></i>
+        <span class="t">&lt; 1 hour</span>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="bad">someone doing the work</span>
+      <span style="color:var(--muted)"><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--rule);margin-right:0.45rem"></span>waiting in a queue</span>
+    </div>
+    <figcaption>The two days were never compute. Networking, IAM roles, cluster add-ons and secrets wiring each sat in a different person's queue — which is why automating the work alone would not have fixed it.</figcaption>
+  </figure>
+
   <p>The same modules build <strong>every environment across 15+ accounts</strong>.</p>
   <p class="method">Method: the account count is the AWS Organizations tree — three environments across four product and platform domains, plus shared services, security tooling, log archive and networking. It's 15 or 16 depending on whether sandbox accounts are counted, so I say 15+.</p>
 

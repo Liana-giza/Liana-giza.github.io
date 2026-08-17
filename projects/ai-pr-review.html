@@ -81,28 +81,55 @@
 
   <p><strong>The prompt lives inline in the workflow</strong> rather than being read from a file at runtime, so changing the review contract requires a merge to the default branch like any other protected change. Single-sourcing the content across repos through a generator keeps the copies identical without weakening that boundary.</p>
 
-  <p>The part that took the most iteration wasn't what to catch — it was what to stay quiet about:</p>
+  <p>All three decisions live in a handful of lines of the workflow:</p>
 
   <div class="artifact">
-<pre><code><span class="c-com">FLAG (worth a comment):</span>
-  - IAM not least-privilege: wildcard actions/resources, IRSA trust
-    policies not scoped to a specific ServiceAccount.
-  - Hardcoded secrets, credentials, tokens, or keys.
-  - Over-open security groups (0.0.0.0/0 on sensitive ports).
-  - Mutable image tags (:latest) — non-reproducible, breaks rollback.
-  - Injection: untrusted input reaching raw SQL, shell commands,
-    file paths, or templates without parameterization or escaping.
-  - Broken authz: a handler acting on a record without verifying
-    the caller owns it; trusting a client-supplied role or price.
-  - Anything that violates the ticket's acceptance criteria.
+<pre><code><span class="c-key">on</span>:
+  <span class="c-key">pull_request</span>:
+    <span class="c-com"># opened/reopened only — NOT synchronize. Cost control.</span>
+    types: [opened, reopened]
 
-<span class="c-com">IGNORE (do NOT comment — linters and formatters own these):</span>
-  - Style, formatting, indentation, naming, import order.
-  - Subjective preferences. Missing or typo'd comments.
-  - AWS account IDs in ARNs <span class="c-com">— they are not secrets, and IRSA</span>
-    <span class="c-com">role-ARN annotations always contain one. Standard pattern,</span>
-    <span class="c-com">not a finding.</span></code></pre>
+<span class="c-key">permissions</span>:
+  contents: read
+  pull-requests: write      <span class="c-com"># comment only. No merge, no push.</span>
+
+<span class="c-key">steps</span>:
+  - name: AI review
+    uses: anthropics/claude-code-action@v1
+    with:
+      anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+      prompt: |               <span class="c-com"># inline, so changing it needs a merge</span>
+        ...</code></pre>
   </div>
+
+  <p>But the part that took the most iteration wasn't what to catch — it was what to stay quiet about:</p>
+
+  <figure class="viz">
+    <div class="twocol">
+      <div class="col col-flag">
+        <h4>Flag</h4>
+        <ul>
+          <li>IAM that isn't least-privilege — wildcards, trust policies not scoped to one service account</li>
+          <li>Hardcoded secrets, credentials, tokens</li>
+          <li>Security groups open to the world on sensitive ports</li>
+          <li>Mutable image tags — breaks clean rollback</li>
+          <li>Injection: untrusted input reaching SQL, shell, file paths, templates</li>
+          <li>Broken authorization — acting on a record without checking the caller owns it</li>
+          <li>Anything that fails the ticket's acceptance criteria</li>
+        </ul>
+      </div>
+      <div class="col col-ignore">
+        <h4>Stay quiet</h4>
+        <ul>
+          <li>Style, formatting, indentation, naming, import order</li>
+          <li>Subjective preferences</li>
+          <li>Missing or typo'd comments</li>
+          <li>AWS account IDs in ARNs — they aren't secrets, and IRSA role annotations always contain one</li>
+        </ul>
+      </div>
+    </div>
+    <figcaption>The right-hand column is the one that took the work. Linters already own everything in it deterministically, and a reviewer that comments on all of it teaches people to scroll past the column on the left.</figcaption>
+  </figure>
 
   <h2>What went wrong</h2>
 

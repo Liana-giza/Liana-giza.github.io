@@ -6,7 +6,13 @@ want to know whether I'm real.
 ## How it's built
 
 Plain HTML and one stylesheet. No framework, no static-site generator, no
-JavaScript, no build step. `git push` is the deploy.
+build step. `git push` is the deploy.
+
+JavaScript appears on exactly one page, as progressive enhancement and
+nothing else: the error-budget bar on the observability page renders its
+real values in HTML, and the script only adds the slider on top. With
+scripting disabled the page is complete — you lose the ability to drag,
+not the content.
 
 That's a deliberate choice rather than a shortcut. The site's job is to get one
 project page read, and every layer between writing and shipping is a tax on
