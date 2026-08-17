@@ -29,7 +29,7 @@
   <h2>What it is</h2>
   <p class="lede">Build pipelines and applications used to authenticate to AWS with access keys — long strings that work forever, sit in a settings page or a Kubernetes Secret, and are just as useful to anyone who copies them. I replaced them with identity: the pipeline and the workload each prove who they are at the moment they run, and get a credential that expires in minutes. Over 120 standing keys stopped existing.</p>
 
-  <p class="scope"><strong>Scope and ownership.</strong> Earlier role, second half of 2021 into 2022 — this was before GitHub Actions could federate to AWS at all, which is what made it possible. <strong>Two of us on the DevOps side, supporting four application teams.</strong> I owned the identity design and the migration: the trust policies, the per-workload roles, the rollout sequence, and the inventory work that told us what was actually using each key. Every team that shipped through those pipelines had to change how their workflow authenticated, so the delivery was as much coordination as configuration.</p>
+  <p class="scope"><strong>Scope and ownership.</strong> Earlier role, late 2021 into 2022 — this work began as GitHub Actions introduced OIDC federation to AWS, which is what made it possible. <strong>Two of us on the DevOps side, supporting four application teams.</strong> I owned the identity design and the migration: the trust policies, the per-workload roles, the rollout sequence, and the inventory work that told us what was actually using each key. Every team that shipped through those pipelines had to change how their workflow authenticated, so the delivery was as much coordination as configuration.</p>
 
   <h2>What changed</h2>
 
