@@ -1,6 +1,6 @@
-# liana-giza.github.io
+# lianagizatulina.com
 
-Personal site. Two doors: thirty seconds if you're screening, ten minutes if you
+Personal site, served by GitHub Pages from this repo. Two doors: thirty seconds if you're screening, ten minutes if you
 want to know whether I'm real.
 
 ## How it's built
@@ -56,9 +56,9 @@ Deploy from a branch → `main` / `/ (root)`.
 
 ### Custom domain
 
-1. Point DNS at GitHub — `A` records for the apex to `185.199.108.153`,
-   `.109.153`, `.110.153`, `.111.153` (plus the matching `AAAA` records), and a
-   `CNAME` for `www` to `liana-giza.github.io.`
+1. Point DNS at GitHub. On Cloudflare a single flattened `CNAME` at the apex
+   to `liana-giza.github.io` works, plus the same for `www` — both set to
+   **DNS only**, never proxied, or the certificate cannot be issued.
 2. Settings → Pages → Custom domain. This commits a `CNAME` file here.
 3. Tick **Enforce HTTPS** once the certificate provisions.
 4. Verify the domain under account settings → Pages → verified domains. Without
