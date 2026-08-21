@@ -260,3 +260,10 @@ footer {
   .pcard-note { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.9375rem; }
   .more { margin: 1.25rem 0 0; font-size: 0.9375rem; }
 .showcase figcaption .go { display: block; margin-top: 0.4rem; }
+
+/* projects index: diagram thumbnails */
+.doors.with-thumb { grid-template-columns: repeat(2, 1fr); }
+.doors.with-thumb .door { display: flex; flex-direction: column; }
+.thumb { display: block; width: 100%; height: auto; margin: 0 0 0.85rem; color: var(--rule-strong); }
+.doors.with-thumb .door-time { margin-top: auto; padding-top: 0.6rem; }
+@media (max-width: 46rem) { .doors.with-thumb { grid-template-columns: 1fr; } }
