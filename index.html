@@ -33,22 +33,73 @@
     </p>
   </header>
 
-  <nav aria-label="Choose how much time you have">
-    <ul class="doors">
-      <li>
-        <a class="door" href="30-seconds.html">
-          <p class="door-label">I have 30 seconds</p>
-          <p class="door-note">The short version: what I do, the stack, the numbers, how to reach me.</p>
-        </a>
-      </li>
-      <li>
-        <a class="door" href="projects/">
-          <p class="door-label">I have 10 minutes</p>
-          <p class="door-note">Six projects — what changed, how they work, and what went wrong.</p>
-        </a>
-      </li>
-    </ul>
-  </nav>
+  <figure class="showcase">
+    <svg viewBox="0 0 680 260" role="img" aria-labelledby="home-diagram-title home-diagram-desc" xmlns="http://www.w3.org/2000/svg">
+        <title id="home-diagram-title">Read and write paths, separated</title>
+        <desc id="home-diagram-desc">The assistant reaches the read server, which queries Prometheus, Kubernetes state, and bounded logs using a read-only service account. Separately, the assistant reaches the action server, which holds no cluster credentials and can only open a GitHub pull request. A human reviews and merges that pull request, and only then does the delivery pipeline apply the change to the cluster.</desc>
+        <g fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="8" y="104" width="104" height="46" rx="6"/>
+          <rect class="n-read" x="168" y="26" width="128" height="46" rx="6"/>
+          <rect class="n-act" x="168" y="182" width="128" height="46" rx="6"/>
+          <rect x="360" y="26" width="140" height="46" rx="6"/>
+          <rect x="360" y="182" width="140" height="46" rx="6"/>
+          <rect x="548" y="104" width="124" height="46" rx="6"/>
+        </g>
+        <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" text-anchor="middle">
+          <text x="60" y="124">Engineer</text>
+          <text x="60" y="140">+ assistant</text>
+          <text x="232" y="45">read server</text>
+          <text x="232" y="61" font-size="11">read-only identity</text>
+          <text x="232" y="201">action server</text>
+          <text x="232" y="217" font-size="11">no cluster access</text>
+          <text x="430" y="45">Prometheus · K8s</text>
+          <text x="430" y="61" font-size="11">bounded logs</text>
+          <text x="430" y="201">GitHub pull request</text>
+          <text x="430" y="217" font-size="11">reviewed, then merged</text>
+          <text x="610" y="124">cluster</text>
+          <text x="610" y="140" font-size="11">pipeline applies</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1.5" fill="none">
+          <path d="M112 118 L 150 118 L 150 49 L 166 49"/>
+          <path d="M112 136 L 150 136 L 150 205 L 166 205"/>
+          <path d="M296 49 L 358 49"/>
+          <path d="M296 205 L 358 205"/>
+          <path d="M500 205 L 524 205 L 524 127 L 546 127"/>
+        </g>
+        <g fill="currentColor">
+          <path d="M166 49 l -7 -3.5 v 7 z"/>
+          <path d="M166 205 l -7 -3.5 v 7 z"/>
+          <path d="M358 49 l -7 -3.5 v 7 z"/>
+          <path d="M358 205 l -7 -3.5 v 7 z"/>
+          <path d="M546 127 l -7 -3.5 v 7 z"/>
+        </g>
+        <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-style="italic" text-anchor="end">
+          <text x="672" y="182">no path from the agent</text>
+          <text x="672" y="197">directly to the cluster</text>
+        </g>
+      </svg>
+    <figcaption>The safety model behind the AI ops layer: the agent reads production, but the only way it can change anything is a pull request a human merges. <a href="projects/mcp-suite.html">How it works &rarr;</a></figcaption>
+  </figure>
+
+  <ul class="cards">
+    <li><a class="pcard" href="projects/mcp-suite.html">
+      <p class="pcard-metric">read / write split</p>
+      <p class="pcard-title">Platform MCP suite</p>
+      <p class="pcard-note">An AI ops layer that investigates incidents across 50 services and proposes fixes as pull requests.</p>
+    </a></li>
+    <li><a class="pcard" href="projects/eks-observability.html">
+      <p class="pcard-metric">MTTR 45 &rarr; 15 min</p>
+      <p class="pcard-title">EKS observability</p>
+      <p class="pcard-note">A 99.9% SLO with burn-rate alerting on a Prometheus stack I run myself.</p>
+    </a></li>
+    <li><a class="pcard" href="projects/secrets-csi.html">
+      <p class="pcard-metric">zero code changes</p>
+      <p class="pcard-title">Secrets CSI migration</p>
+      <p class="pcard-note">Credentials moved out of plain Kubernetes Secrets under live traffic, one IRSA role per app.</p>
+    </a></li>
+  </ul>
+
+  <p class="more"><a href="projects/">All six projects &rarr;</a> &nbsp;·&nbsp; <a href="30-seconds.html">The 30-second version &rarr;</a></p>
 
   <p class="numbers">
     <a href="projects/eks-observability.html"><strong>MTTR 45 &rarr; 15 min</strong></a> · <a href="projects/eks-observability.html"><strong>alert noise halved</strong></a> · <a href="projects/oidc-irsa.html"><strong>120+ static keys eliminated</strong></a>
