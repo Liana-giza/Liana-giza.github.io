@@ -259,3 +259,4 @@ footer {
   .pcard-title { margin: 0.4rem 0 0; font-size: 1.0625rem; font-weight: 700; line-height: 1.25; }
   .pcard-note { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.9375rem; }
   .more { margin: 1.25rem 0 0; font-size: 0.9375rem; }
+.showcase figcaption .go { display: block; margin-top: 0.4rem; }
