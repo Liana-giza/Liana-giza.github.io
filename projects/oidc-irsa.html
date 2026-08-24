@@ -29,15 +29,21 @@
   <h2>What it is</h2>
   <p class="lede">Build pipelines and applications used to authenticate to AWS with access keys — long strings that work forever, sit in a settings page or a Kubernetes Secret, and are just as useful to anyone who copies them. I replaced them with identity: the pipeline and the workload each prove who they are at the moment they run, and get a credential that expires in minutes. Over 120 standing keys stopped existing.</p>
 
-  <p class="scope"><strong>Scope and ownership.</strong> Earlier role, late 2021 into 2022 — this work began as GitHub Actions introduced OIDC federation to AWS, which is what made it possible. <strong>Two of us on the DevOps side, supporting four application teams.</strong> I owned the identity design and the migration: the trust policies, the per-workload roles, the rollout sequence, and the inventory work that told us what was actually using each key. Every team that shipped through those pipelines had to change how their workflow authenticated, so the delivery was as much coordination as configuration.</p>
+  <details class="method"><summary>Scope and ownership</summary>
+    <p>Earlier role, late 2021 into 2022 — this work began as GitHub Actions introduced OIDC federation to AWS, which is what made it possible. <strong>Two of us on the DevOps side, supporting four application teams.</strong> I owned the identity design and the migration: the trust policies, the per-workload roles, the rollout sequence, and the inventory work that told us what was actually using each key. Every team that shipped through those pipelines had to change how their workflow authenticated, so the delivery was as much coordination as configuration.</p>
+  </details>
 
   <h2>What changed</h2>
 
   <p><strong>120+ static access keys eliminated</strong>, across the account estate.</p>
-  <p class="method">Method: a count of active access keys in the AWS IAM credential report before the rollout, summed across accounts. The credential report is the artifact — it's the natural thing to have pulled, and it's the same report anyone auditing this would ask for.</p>
+  <details class="method"><summary>How this was measured</summary>
+    <p>a count of active access keys in the AWS IAM credential report before the rollout, summed across accounts. The credential report is the artifact — it's the natural thing to have pulled, and it's the same report anyone auditing this would ask for.</p>
+  </details>
 
   <p><strong>35 services moved onto per-workload identity</strong> via IRSA.</p>
-  <p class="method">Method: a count of workloads making AWS API calls, taken from the service inventory. Not every service needed a role — plenty never called AWS at all. That's what makes 35 a real number rather than a suspiciously round one.</p>
+  <details class="method"><summary>How this was measured</summary>
+    <p>a count of workloads making AWS API calls, taken from the service inventory. Not every service needed a role — plenty never called AWS at all. That's what makes 35 a real number rather than a suspiciously round one.</p>
+  </details>
 
   <figure class="viz">
     <div class="compare" role="img" aria-label="Standing access keys went from over 120 to zero. Credential lifetime went from indefinite to minutes. A leaked credential went from useful until someone revokes it to useful until it expires on its own.">
@@ -67,13 +73,13 @@
     <svg viewBox="0 0 680 220" role="img" aria-labelledby="o-title o-desc" xmlns="http://www.w3.org/2000/svg">
       <title id="o-title">Two federated paths replacing stored keys</title>
       <desc id="o-desc">A GitHub Actions workflow requests an OIDC token from GitHub and presents it to AWS STS, which validates it and returns temporary credentials. Separately, a Kubernetes pod presents its service account token to STS, which validates it against the cluster OIDC provider and returns temporary credentials scoped to that workload's role. In both paths nothing long-lived is stored anywhere.</desc>
-      <g fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="8" y="24" width="140" height="44" rx="6"/>
-        <rect x="8" y="146" width="140" height="44" rx="6"/>
-        <rect x="212" y="24" width="150" height="44" rx="6"/>
-        <rect x="212" y="146" width="150" height="44" rx="6"/>
-        <rect x="428" y="82" width="120" height="50" rx="6"/>
-        <rect x="596" y="82" width="76" height="50" rx="6"/>
+      <g stroke="currentColor" stroke-width="1.5">
+        <rect class="n-box" x="8" y="24" width="140" height="44" rx="6"/>
+        <rect class="n-box" x="8" y="146" width="140" height="44" rx="6"/>
+        <rect class="n-box" x="212" y="24" width="150" height="44" rx="6"/>
+        <rect class="n-box" x="212" y="146" width="150" height="44" rx="6"/>
+        <rect class="n-box" x="428" y="82" width="120" height="50" rx="6"/>
+        <rect class="n-box" x="596" y="82" width="76" height="50" rx="6"/>
       </g>
       <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">
         <text x="78" y="43">CI workflow</text>

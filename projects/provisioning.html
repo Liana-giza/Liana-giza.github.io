@@ -29,12 +29,16 @@
   <h2>What it is</h2>
   <p class="lede">Standing up a new environment used to mean a person working through a written runbook — networking, permissions, cluster add-ons, secrets wiring — with hand-offs between people at several points. It took about two days, most of which was waiting. I turned it into a set of reusable modules a product team runs themselves, and the same build now takes under an hour.</p>
 
-  <p class="scope"><strong>Scope and ownership.</strong> Platform team of six engineers and a manager, supporting four product teams across 15+ AWS accounts. I owned the module layer — the network and cluster modules, the per-environment composition, and the pipeline that applies them. <strong>In use since late 2023 — every environment built since has come from them.</strong> What each team then builds inside their environment is theirs; my job stopped at handing over something consistent to build on.</p>
+  <details class="method"><summary>Scope and ownership</summary>
+    <p>Platform team of six engineers and a manager, supporting four product teams across 15+ AWS accounts. I owned the module layer — the network and cluster modules, the per-environment composition, and the pipeline that applies them. <strong>In use since late 2023 — every environment built since has come from them.</strong> What each team then builds inside their environment is theirs; my job stopped at handing over something consistent to build on.</p>
+  </details>
 
   <h2>What changed</h2>
 
   <p>A new environment went from <strong>about two days to under an hour</strong>.</p>
-  <p class="method">Method: wall-clock from <code>terraform apply</code> to a namespace serving traffic, averaged over the last three environment builds. The old two days were not compute time — they were hand-offs. Networking, IAM roles, cluster add-ons and secrets wiring each sat in a different person's queue.</p>
+  <details class="method"><summary>How this was measured</summary>
+    <p>wall-clock from <code>terraform apply</code> to a namespace serving traffic, averaged over the last three environment builds. The old two days were not compute time — they were hand-offs. Networking, IAM roles, cluster add-ons and secrets wiring each sat in a different person's queue.</p>
+  </details>
 
   <figure class="viz">
     <div class="track" role="img" aria-label="The old two-day build was four short pieces of actual work separated by long waits in other people's queues. The new build is one continuous run of under an hour.">
@@ -60,9 +64,11 @@
   </figure>
 
   <p>The same modules build <strong>every environment across 15+ accounts</strong>.</p>
-  <p class="method">Method: the account count is the AWS Organizations tree — three environments across four product and platform domains, plus shared services, security tooling, log archive and networking. It's 15 or 16 depending on whether sandbox accounts are counted, so I say 15+.</p>
+  <details class="method"><summary>How this was measured</summary>
+    <p>the account count is the AWS Organizations tree — three environments across four product and platform domains, plus shared services, security tooling, log archive and networking. It's 15 or 16 depending on whether sandbox accounts are counted, so I say 15+.</p>
+  </details>
 
-  <p>The change that mattered more than the time saved is that differences between environments became <em>declared</em>. When each environment is built from the same modules with different variables, staging differing from production is a line someone wrote on purpose — not something that accumulated while nobody was looking. Most of the incidents that start with "but it worked in staging" are really this problem.</p>
+  <p>The change that mattered more than the time saved: differences between environments became declared. Built from the same modules with different variables, staging differing from production is a line someone wrote on purpose rather than something that accumulated. Most "but it worked in staging" incidents are this problem.</p>
 
   <h2>How it works</h2>
 
@@ -72,12 +78,12 @@
     <svg viewBox="0 0 680 230" role="img" aria-labelledby="pv-title pv-desc" xmlns="http://www.w3.org/2000/svg">
       <title id="pv-title">Shared modules composed per environment</title>
       <desc id="pv-desc">A shared set of modules — network, cluster, and identity — is composed once per environment. Each environment has its own variables file and its own state backend. A pull request runs a plan, and a merge applies it through CI, producing the development, staging, and production environments from the same module code.</desc>
-      <g fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="8" y="80" width="132" height="70" rx="6"/>
-        <rect x="212" y="80" width="140" height="70" rx="6"/>
-        <rect x="424" y="18" width="120" height="42" rx="6"/>
-        <rect x="424" y="94" width="120" height="42" rx="6"/>
-        <rect x="424" y="170" width="120" height="42" rx="6"/>
+      <g stroke="currentColor" stroke-width="1.5">
+        <rect class="n-box" x="8" y="80" width="132" height="70" rx="6"/>
+        <rect class="n-box" x="212" y="80" width="140" height="70" rx="6"/>
+        <rect class="n-box" x="424" y="18" width="120" height="42" rx="6"/>
+        <rect class="n-box" x="424" y="94" width="120" height="42" rx="6"/>
+        <rect class="n-box" x="424" y="170" width="120" height="42" rx="6"/>
       </g>
       <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">
         <text x="74" y="105">modules</text>
@@ -111,9 +117,9 @@
 
   <p>Two decisions on that path are worth stating, because both traded convenience for something else.</p>
 
-  <p><strong>Non-production doesn't get a NAT gateway unless it asks for one.</strong> A NAT gateway is roughly $32 a month before data processing charges, per gateway, per environment — the kind of cost that isn't worth a conversation individually and is worth real money across an estate. Making it an optional resource gated on a variable means dev and staging run without one by default, and an environment that genuinely needs egress declares it.</p>
+  <p><strong>Non-production doesn't get a NAT gateway unless it asks.</strong> At roughly $32 a month before data charges, per gateway per environment, it's the kind of cost not worth a conversation individually and worth real money across an estate. Gated on a variable, dev and staging run without one by default.</p>
 
-  <p><strong>The cluster does not hand admin rights to whoever created it.</strong> AWS will, by default, grant cluster-admin to the identity that ran the create — which in a CI-provisioned world is a pipeline role, and it's a grant nobody chose and no one can see in the manifests. Turning it off means every administrative grant has to be written down explicitly:</p>
+  <p><strong>The cluster doesn't hand admin rights to whoever created it.</strong> AWS grants cluster-admin to the identity that ran the create &mdash; in a CI-provisioned world that's a pipeline role, a grant nobody chose and nobody can see in the manifests. Turning it off makes every grant explicit:</p>
 
   <div class="artifact">
 <pre><code><span class="c-com"># Access entries only — no aws-auth ConfigMap.</span>
@@ -151,11 +157,11 @@
 
   <p>A module hardcoded its storage class, and the assumption held right up until it didn't.</p>
 
-  <p><code>gp3</code> is the correct default — newer, cheaper, faster than what came before, and the right choice for anything built recently. So it went into the module as a constant rather than a variable, and every environment built from that module worked. Then it was pointed at an older cluster that didn't have that storage class available, and the persistent volume claims simply sat in <code>Pending</code>. Nothing errored. The workload just never started, waiting for storage that was never going to be provisioned.</p>
+  <p>gp3 is the correct default &mdash; newer, cheaper, faster &mdash; so it went into the module as a constant, and every environment built from it worked. Then it met an older cluster without that storage class, and the volume claims sat in Pending. Nothing errored. The workload just never started.</p>
 
   <p>The failure is specific to the thing that makes shared modules valuable. A module encodes decisions so that nobody has to make them again — which is exactly the point, and also means a decision that isn't universally true gets propagated everywhere with confidence. The wider the reuse, the further a wrong assumption travels before anyone questions it.</p>
 
-  <p>I'd standardize on one storage class again; that call was right. What I'd change is the difference between a default and a constant. A default expresses "this is what you want unless you know otherwise" and can be overridden at the edge where someone knows otherwise. A constant expresses "this is always true," which for infrastructure assumptions is a claim worth being suspicious of. It's now a variable with <code>gp3</code> as its default, and the behaviour in the common case is identical.</p>
+  <p>I'd standardize on one storage class again. What I'd change is the difference between a default and a constant: a default says "this is what you want unless you know otherwise" and can be overridden; a constant says "this is always true," which for an infrastructure assumption is worth being suspicious of. It's now a variable with gp3 as its default.</p>
 
   <footer>
     <a href="./">All projects</a> · <a href="../">Home</a>

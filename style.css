@@ -276,3 +276,4 @@ details.method p { margin: 0.6rem 0 0; font-size: 0.9375rem; color: var(--muted)
 .n-src  { fill: var(--hover); }
 .n-core { fill: var(--left); stroke: var(--left-ink); }
 .n-out  { fill: var(--card); stroke: var(--rule-strong); }
+.n-box { fill: var(--hover); }

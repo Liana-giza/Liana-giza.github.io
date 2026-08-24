@@ -29,16 +29,22 @@
   <h2>What it is</h2>
   <p class="lede">An automated reviewer that reads every pull request, compares what changed against what the ticket actually asked for, and leaves one comment saying where those two things disagree. It also flags the security problems that are easy to miss in a diff. It never blocks a merge — a person still decides.</p>
 
-  <p class="scope"><strong>Scope and ownership.</strong> Platform team of six engineers and a manager, supporting four product teams. I did not build the underlying action — that's Anthropic's, off the shelf. What I built is the review itself: what it looks for, what it deliberately ignores, how it gets the ticket, and the shape of the output. The distinction matters, and I'd rather state it than have it found.</p>
+  <details class="method"><summary>Scope and ownership</summary>
+    <p>Platform team of six engineers and a manager, supporting four product teams. I did not build the underlying action — that's Anthropic's, off the shelf. What I built is the review itself: what it looks for, what it deliberately ignores, how it gets the ticket, and the shape of the output. The distinction matters, and I'd rather state it than have it found.</p>
+  </details>
 
   <h2>What changed</h2>
 
   <p>Every pull request now gets a first-pass review before a human opens it.</p>
-  <p class="method">Method: coverage is the honest claim here. Every PR is reviewed because the trigger fires on every PR — that's a property of the wiring, not a measurement. I never instrumented reviewer time saved, so I don't quote a number for it.</p>
+  <details class="method"><summary>How this was measured</summary>
+    <p>coverage is the honest claim here. Every PR is reviewed because the trigger fires on every PR — that's a property of the wiring, not a measurement. I never instrumented reviewer time saved, so I don't quote a number for it.</p>
+  </details>
 
   <p>The motivating problem was that AI-assisted development had made writing code much faster without making reviewing it any faster. Review became the bottleneck. This takes the mechanical part of the first pass — did the diff do what the ticket said, are there obvious risks — so a human starts from a shorter list.</p>
 
-  <p class="method">The gap I'd close first: I never measured a false-positive rate. "Engineers quietly stopped reading it" is the failure mode that kills tools like this, and I have no instrument that would have told me it was happening. Sampling fifty reviews and labelling them by hand is what I'd do before expanding it further.</p>
+  <details class="method"><summary>How this was measured</summary>
+    <p>The gap I'd close first: I never measured a false-positive rate. "Engineers quietly stopped reading it" is the failure mode that kills tools like this, and I have no instrument that would have told me it was happening. Sampling fifty reviews and labelling them by hand is what I'd do before expanding it further.</p>
+  </details>
 
   <h2>How it works</h2>
 
@@ -48,12 +54,12 @@
     <svg viewBox="0 0 680 200" role="img" aria-labelledby="p-title p-desc" xmlns="http://www.w3.org/2000/svg">
       <title id="p-title">What happens when a pull request opens</title>
       <desc id="p-desc">Opening a pull request triggers the workflow. The workflow fetches the linked ticket from Jira and reads the diff, passes both to the review model, and the model posts exactly one comment on the pull request. The comment is advisory: a human reviewer decides, and the deterministic checks such as tests and linters remain the blocking gate.</desc>
-      <g fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="8" y="70" width="120" height="46" rx="6"/>
-        <rect x="182" y="18" width="132" height="42" rx="6"/>
-        <rect x="182" y="124" width="132" height="42" rx="6"/>
-        <rect x="368" y="70" width="132" height="46" rx="6"/>
-        <rect x="554" y="70" width="118" height="46" rx="6"/>
+      <g stroke="currentColor" stroke-width="1.5">
+        <rect class="n-box" x="8" y="70" width="120" height="46" rx="6"/>
+        <rect class="n-box" x="182" y="18" width="132" height="42" rx="6"/>
+        <rect class="n-box" x="182" y="124" width="132" height="42" rx="6"/>
+        <rect class="n-box" x="368" y="70" width="132" height="46" rx="6"/>
+        <rect class="n-box" x="554" y="70" width="118" height="46" rx="6"/>
       </g>
       <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">
         <text x="68" y="90">PR opened</text>
@@ -87,9 +93,9 @@
 
   <p>Three decisions shaped it, and each one traded something away.</p>
 
-  <p><strong>Advisory, not a required check.</strong> A non-deterministic reviewer should not hold the merge button. Two reasons: the fastest way to make engineers resent a tool is to have it block them on a false positive, and a required check implies a guarantee a model cannot make. The deterministic checks — tests, linters, scanners — stay blocking. This one is a second pair of eyes.</p>
+  <p><strong>Advisory, not a required check.</strong> A non-deterministic reviewer shouldn't hold the merge button: blocking on a false positive is the fastest way to make engineers resent a tool, and a required check implies a guarantee a model cannot make. Tests, linters and scanners stay blocking. This is a second pair of eyes.</p>
 
-  <p><strong>It runs when a PR opens, not on every push.</strong> Re-running on every commit multiplies spend with no proportional benefit. The cost I accepted is that the review goes stale after the first round of fixes, so it never sees problems introduced by responding to its own feedback. If spend weren't a constraint I'd run it on ready-for-review plus explicit re-request.</p>
+  <p><strong>It runs when a PR opens, not on every push.</strong> Re-running on every commit multiplies spend with no proportional benefit. The cost I accepted: the review goes stale after the first round of fixes, so it never sees problems introduced by responding to its own feedback.</p>
 
   <p><strong>The prompt lives inline in the workflow</strong> rather than being read from a file at runtime, so changing the review contract requires a merge to the default branch like any other protected change. Single-sourcing the content across repos through a generator keeps the copies identical without weakening that boundary.</p>
 
@@ -147,11 +153,11 @@
 
   <p>The first version commented on everything it noticed, and that nearly killed it.</p>
 
-  <p>A reviewer that flags a naming inconsistency in the same voice it flags a wildcard IAM policy teaches people that most of what it says is skippable — and once someone is scrolling past its comments, they scroll past the one that mattered too. The tool wasn't wrong. It was noisy, which in review tooling is the same thing as being wrong, just slower-acting.</p>
+  <p>A reviewer that flags a naming nit in the same voice it flags a wildcard IAM policy teaches people its comments are skippable &mdash; and then they scroll past the one that mattered. It wasn't wrong. It was noisy, which in review tooling is the same thing, just slower.</p>
 
-  <p>The fix was to write the silence down. An explicit IGNORE list names what the reviewer must never comment on, on the grounds that linters and formatters already own those and do it deterministically. The AWS account ID entry is the one I'd point at: account IDs look like secrets, and a security-minded reviewer flags them every time — but IRSA role annotations always contain one, so flagging it means crying wolf on the standard pattern in nearly every infrastructure PR.</p>
+  <p>The fix was writing the silence down. An explicit IGNORE list names what the reviewer must never comment on, because linters already own those and do it deterministically. The entry I'd point at is AWS account IDs: they look like secrets, but IRSA role annotations always contain one &mdash; so flagging them means crying wolf on nearly every infrastructure PR.</p>
 
-  <p>I'd make the same call again, because you cannot calibrate this before seeing real output — the first version has to be over-eager so you can find out which of its instincts are wrong. What I'd change is treating the IGNORE list as a first-class part of the review contract from the start, rather than something bolted on once engineers started ignoring the bot.</p>
+  <p>I'd make the same call again &mdash; you can't calibrate this before seeing real output, so the first version has to be over-eager. What I'd change is treating the IGNORE list as part of the review contract from the start, not something bolted on once engineers began ignoring the bot.</p>
 
   <footer>
     <a href="./">All projects</a> · <a href="../">Home</a>
