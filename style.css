@@ -277,3 +277,24 @@ details.method p { margin: 0.6rem 0 0; font-size: 0.9375rem; color: var(--muted)
 .n-core { fill: var(--left); stroke: var(--left-ink); }
 .n-out  { fill: var(--card); stroke: var(--rule-strong); }
 .n-box { fill: var(--hover); }
+
+/* mcp-suite: "ask the agent" panel + path highlighting */
+.ask { margin: 1.5rem 0 0; padding: 1.1rem 1.2rem; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; }
+.ask-lead { margin: 0 0 0.85rem; font-size: 0.9375rem; color: var(--muted); }
+.ask-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+.ask-list li { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.ask-btn { flex: 1 1 16rem; text-align: left; font: inherit; font-size: 0.9375rem; color: inherit;
+  background: none; border: 1px solid var(--rule); border-radius: 7px; padding: 0.45rem 0.7rem; cursor: default; }
+.ask.on .ask-btn { cursor: pointer; }
+.ask.on .ask-btn:hover { background: var(--hover); border-color: var(--rule-strong); }
+.ask-btn.sel { background: var(--hover); border-color: var(--rule-strong); font-weight: 600; }
+.verdict { flex: 0 0 auto; font-family: var(--mono); font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; }
+.v-read { background: var(--left); color: var(--left-ink); }
+.v-act  { background: var(--hover); color: var(--accent); border: 1px solid var(--rule-strong); }
+.v-none { background: var(--spent); color: var(--spent-ink); }
+.ask-out { margin: 0.9rem 0 0; font-size: 0.9375rem; color: var(--muted); min-height: 2.6em; }
+.ask.on .ask-out { color: var(--fg); }
+#fig .p-read, #fig .p-act, #fig .no-path { transition: opacity .18s; }
+#fig.hl-read .p-act, #fig.hl-act .p-read,
+#fig.hl-none .p-read, #fig.hl-none .p-act { opacity: 0.15; }
+#fig.hl-none .no-path { fill: var(--spent-over); font-weight: 700; font-style: normal; }

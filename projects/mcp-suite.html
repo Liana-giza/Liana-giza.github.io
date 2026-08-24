@@ -17,7 +17,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Liana Gizatulina, Platform / DevOps Engineer. 99.9% SLO since 2024, environments 2 days to 1 hour, AI triage 22 to 8 min.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="../style.css?v=4">
+<link rel="stylesheet" href="../style.css?v=5">
 </head>
 <body>
 <div class="wrap">
@@ -49,17 +49,17 @@
 
   <p>Two servers, split by what they are allowed to do. That split is the safety boundary — it isn't a deployment detail.</p>
 
-  <figure>
+  <figure id="fig">
     <svg viewBox="0 0 680 260" role="img" aria-labelledby="diagram-title diagram-desc" xmlns="http://www.w3.org/2000/svg">
       <title id="diagram-title">Read and write paths, separated</title>
       <desc id="diagram-desc">The assistant reaches the read server, which queries Prometheus, Kubernetes state, and bounded logs using a read-only service account. Separately, the assistant reaches the action server, which holds no cluster credentials and can only open a GitHub pull request. A human reviews and merges that pull request, and only then does the delivery pipeline apply the change to the cluster.</desc>
       <g stroke="currentColor" stroke-width="1.5">
         <rect class="n-box" x="8" y="104" width="104" height="46" rx="6"/>
-        <rect class="n-read" x="168" y="26" width="128" height="46" rx="6"/>
-        <rect class="n-act" x="168" y="182" width="128" height="46" rx="6"/>
-        <rect class="n-box" x="360" y="26" width="140" height="46" rx="6"/>
-        <rect class="n-box" x="360" y="182" width="140" height="46" rx="6"/>
-        <rect class="n-box" x="548" y="104" width="124" height="46" rx="6"/>
+        <rect class="n-read p-read" x="168" y="26" width="128" height="46" rx="6"/>
+        <rect class="n-act p-act" x="168" y="182" width="128" height="46" rx="6"/>
+        <rect class="n-box p-read" x="360" y="26" width="140" height="46" rx="6"/>
+        <rect class="n-box p-act" x="360" y="182" width="140" height="46" rx="6"/>
+        <rect class="n-box p-act" x="548" y="104" width="124" height="46" rx="6"/>
       </g>
       <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" text-anchor="middle">
         <text x="60" y="124">Engineer</text>
@@ -76,22 +76,22 @@
         <text x="610" y="140" font-size="11">pipeline applies</text>
       </g>
       <g stroke="currentColor" stroke-width="1.5" fill="none">
-        <path d="M112 118 L 150 118 L 150 49 L 166 49"/>
-        <path d="M112 136 L 150 136 L 150 205 L 166 205"/>
-        <path d="M296 49 L 358 49"/>
-        <path d="M296 205 L 358 205"/>
-        <path d="M500 205 L 524 205 L 524 127 L 546 127"/>
+        <path class="p-read" d="M112 118 L 150 118 L 150 49 L 166 49"/>
+        <path class="p-act" d="M112 136 L 150 136 L 150 205 L 166 205"/>
+        <path class="p-read" d="M296 49 L 358 49"/>
+        <path class="p-act" d="M296 205 L 358 205"/>
+        <path class="p-act" d="M500 205 L 524 205 L 524 127 L 546 127"/>
       </g>
       <g fill="currentColor">
-        <path d="M166 49 l -7 -3.5 v 7 z"/>
-        <path d="M166 205 l -7 -3.5 v 7 z"/>
-        <path d="M358 49 l -7 -3.5 v 7 z"/>
-        <path d="M358 205 l -7 -3.5 v 7 z"/>
-        <path d="M546 127 l -7 -3.5 v 7 z"/>
+        <path class="p-read" d="M166 49 l -7 -3.5 v 7 z"/>
+        <path class="p-act" d="M166 205 l -7 -3.5 v 7 z"/>
+        <path class="p-read" d="M358 49 l -7 -3.5 v 7 z"/>
+        <path class="p-act" d="M358 205 l -7 -3.5 v 7 z"/>
+        <path class="p-act" d="M546 127 l -7 -3.5 v 7 z"/>
       </g>
       <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-style="italic" text-anchor="end">
-        <text x="672" y="182">no path from the agent</text>
-        <text x="672" y="197">directly to the cluster</text>
+        <text class="no-path" x="672" y="182">no path from the agent</text>
+        <text class="no-path" x="672" y="197">directly to the cluster</text>
       </g>
     </svg>
     <div class="legend">
@@ -100,6 +100,22 @@
     </div>
     <figcaption>The agent can read the platform and it can open a pull request. There is no edge between the agent and the cluster.</figcaption>
   </figure>
+
+  <div class="ask" id="ask">
+    <p class="ask-lead"><strong>Ask the agent for something.</strong> Every request below is one the suite can receive; four of them it cannot carry out.</p>
+    <ul class="ask-list">
+      <li><button type="button" class="ask-btn" data-path="read" data-why="PromQL through the read server, on a read-only cluster identity.">What's the error rate on checkout?</button><span class="verdict v-read">reads</span></li>
+      <li><button type="button" class="ask-btn" data-path="read" data-why="Workload status. Same read-only identity, no write verbs.">Which pods restarted in the last hour?</button><span class="verdict v-read">reads</span></li>
+      <li><button type="button" class="ask-btn" data-path="read" data-why="Bounded to one namespace, a fifteen-minute window and a line cap — logs are the widest exposure surface in the set.">Show me the last 15 minutes of logs</button><span class="verdict v-read">reads</span></li>
+      <li><button type="button" class="ask-btn" data-path="act" data-why="Opens a pull request against an allow-listed manifest, capped at a 20-line diff. A human merges it; the pipeline applies it.">Raise the memory limit on this deployment</button><span class="verdict v-act">opens a PR</span></li>
+      <li><button type="button" class="ask-btn" data-path="none" data-why="The action server holds no cluster credentials. There is no edge between the agent and the cluster.">Apply that change to the cluster now</button><span class="verdict v-none">refused</span></li>
+      <li><button type="button" class="ask-btn" data-path="none" data-why="Its GitHub token carries contents:write and pull_requests:write. No merge permission.">Merge the pull request you just opened</button><span class="verdict v-none">refused</span></li>
+      <li><button type="button" class="ask-btn" data-path="none" data-why="Outside the path allow-list. The tool resolves the target; the model never supplies a file path.">Edit the CI workflow while you're in there</button><span class="verdict v-none">refused</span></li>
+      <li><button type="button" class="ask-btn" data-path="none" data-why="The delete tool refuses anything it did not create.">Delete that pod</button><span class="verdict v-none">refused</span></li>
+    </ul>
+    <p class="ask-out" id="askOut">Pick a request to see which path it takes.</p>
+  </div>
+
 
   <p>The decision that mattered was pull-request proposals over a direct apply tool. Direct apply is easier to build and much nicer to demo &mdash; you ask, the thing changes. But it needs live cluster write credentials, bypasses code review, and quietly creates a second deployment path alongside the reviewed one. That second path is the real risk: not that the agent is wrong, but that changes reach production by a route nobody watches.</p>
 
@@ -141,5 +157,24 @@ TAG_RE = re.compile(<span class="c-key">r"^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$"</
   </footer>
 
 </div>
+
+<script>
+/* Progressive enhancement. Without JS every row still shows its verdict. */
+(function () {
+  var fig = document.getElementById('fig'),
+      out = document.getElementById('askOut'),
+      btns = document.querySelectorAll('.ask-btn');
+  if (!fig || !out || !btns.length) return;
+  document.getElementById('ask').classList.add('on');
+  Array.prototype.forEach.call(btns, function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(btns, function (o) { o.classList.remove('sel'); });
+      b.classList.add('sel');
+      fig.className = 'hl-' + b.getAttribute('data-path');
+      out.textContent = b.getAttribute('data-why');
+    });
+  });
+})();
+</script>
 </body>
 </html>
