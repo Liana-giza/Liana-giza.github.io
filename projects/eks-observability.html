@@ -17,7 +17,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Liana Gizatulina, Platform / DevOps Engineer. 99.9% SLO since 2024, environments 2 days to 1 hour, AI triage 22 to 8 min.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="../style.css?v=3">
+<link rel="stylesheet" href="../style.css?v=4">
 </head>
 <body>
 <div class="wrap">
@@ -26,29 +26,7 @@
 
   <h1 class="name">Giving a platform a reliability number it could defend</h1>
 
-  <h2>What it is</h2>
-  <p class="lede">Monitoring for a Kubernetes platform running about fifty services. Before it existed, nobody could answer "is the platform healthy right now?" without opening several tools and forming an opinion. Afterwards there was a single number, agreed in advance, that anyone could look at — and alerts that fired when that number was genuinely at risk rather than whenever a graph spiked.</p>
-
-  <p class="scope"><strong>Scope and ownership.</strong> Platform team of six engineers and a manager. Three environments, 40&ndash;50 services across 10&ndash;15 namespaces, 20&ndash;30 nodes, 15+ production deploys a day. I owned this one end to end — the Helm chart, the Prometheus configuration, the SLO definition, the dashboards, the alerting rules, and the runbooks. <strong>The 99.9% target has held since early 2024 — two and a half years.</strong> The IAM and networking it sits on were shared team ground.</p>
-
-  <h2>What changed</h2>
-
-  <p>Median time to resolve a sev-2 went from <strong>about 45 minutes to about 15</strong>.</p>
-  <p class="method">Method: the median — not the mean — of sev-2 resolution time, comparing the quarter before burn-rate alerting to the quarter after, measured from impact rather than detection. A mean would let one long incident tell the whole story. It's one quarter against another rather than a controlled experiment, and there aren't many sev-2s in a quarter, so it's directional rather than precise.</p>
-
-  <p>Alert volume fell by <strong>roughly half</strong>, without removing coverage.</p>
-  <p class="method">Method: alerts actually delivered by Alertmanager per week, counted before and after. The reduction came from changing what the rules ask, not from deleting rules — the burn-rate conditions still catch the incidents the old thresholds caught. That last part was my judgement call at the time, not something I proved with data.</p>
-
-  <figure class="viz">
-    <div class="bars" role="img" aria-label="Alerts delivered per week roughly halved after replacing static thresholds with burn-rate rules.">
-      <span>before</span><div class="bar bar-before" style="width:100%"></div>
-      <span>after</span><div class="bar bar-after" style="width:50%"></div>
-    </div>
-    <figcaption>Static thresholds fire on a moment. Burn-rate rules fire on a trend, so a spike that recovers in thirty seconds never pages anyone.</figcaption>
-  </figure>
-
-  <p>The platform got its first error budget: <strong>about 43 minutes</strong> of unavailability per 30 days, visible to whoever was shipping.</p>
-  <p class="method">Method: arithmetic, not measurement. 0.1% of a rolling 30-day window is 43.2 minutes.</p>
+  <p class="lede">Fifty services, and no way to answer "is the platform healthy?" without opening three tools and forming an opinion. Now there is one number, agreed in advance.</p>
 
   <figure class="viz">
     <div class="viz-label"><span>a month's error budget at 99.9%</span><span>43.2 min</span></div>
@@ -64,27 +42,46 @@
     <figcaption id="bCap">A twelve-minute incident spends roughly a quarter of the month. That is the whole point of measuring a budget rather than counting outages &mdash; it turns "was that bad?" into a number.</figcaption>
   </figure>
 
-  <p>The honest shape of the MTTR number is that almost all of the improvement was in <em>noticing</em> and in <em>knowing where to look</em>. Rollback had always been quick. What changed is that an alert started meaning something specific, and it went to the team that owned the service instead of a channel everyone had learned to ignore.</p>
+  <h2>What changed</h2>
 
-  <p>The clearest evidence that it worked isn't on this page. A credential rotation later took out part of a service's capacity, and the burn-rate alert fired before a single person reported it — which is the entire argument for this kind of alerting, made by something other than me. <a href="secrets-csi.html">That incident is written up here.</a></p>
+  <ul class="tight">
+    <li><strong>Median sev-2 resolution: 45 &rarr; 15 minutes.</strong> Almost all of it in noticing, not fixing &mdash; rollback was always quick.</li>
+    <li><strong>Alert volume halved</strong>, with no rules deleted.</li>
+    <li><strong>A 43-minute monthly error budget</strong>, visible to whoever was shipping.</li>
+  </ul>
+
+  <figure class="viz">
+    <div class="bars" role="img" aria-label="Alerts delivered per week roughly halved after replacing static thresholds with burn-rate rules.">
+      <span>before</span><div class="bar bar-before" style="width:100%"></div>
+      <span>after</span><div class="bar bar-after" style="width:50%"></div>
+    </div>
+    <figcaption>Static thresholds fire on a moment. Burn-rate rules fire on a trend, so a spike that recovers in thirty seconds never pages anyone.</figcaption>
+  </figure>
+
+  <details class="method">
+    <summary>How these were measured</summary>
+    <p><strong>MTTR:</strong> median (not mean) sev-2 resolution time, the quarter before burn-rate alerting against the quarter after, measured from impact rather than detection. One quarter against another, not a controlled experiment, and few sev-2s in a quarter &mdash; directional, not precise.</p>
+    <p><strong>Alert volume:</strong> alerts actually delivered by Alertmanager per week, before and after. The drop came from changing what the rules ask, not from deleting rules. That the burn-rate conditions still catch what the thresholds caught was my judgement at the time, not something I proved.</p>
+    <p><strong>Error budget:</strong> arithmetic. 0.1% of a rolling 30-day window is 43.2 minutes.</p>
+  </details>
+
+  <p>The best evidence isn't on this page: a credential rotation later took out part of a service's capacity, and the burn-rate alert fired before anyone reported it. <a href="secrets-csi.html">That incident is written up here.</a></p>
 
   <h2>How it works</h2>
-
-  <p>Prometheus scrapes what the cluster already emits — ingress traffic, container metrics, node and control-plane state, and application metrics — on a 30-second interval with 30 days of retention. Grafana reads Prometheus and CloudWatch side by side, authenticating to AWS through IRSA so there are no long-lived credentials in the path. Alertmanager routes by severity and owning team.</p>
 
   <figure>
     <svg viewBox="0 0 680 250" role="img" aria-labelledby="d-title d-desc" xmlns="http://www.w3.org/2000/svg">
       <title id="d-title">How telemetry reaches a dashboard and an alert</title>
       <desc id="d-desc">Ingress metrics, container and node metrics, and application metrics are scraped by Prometheus every thirty seconds with thirty days of retention. Prometheus feeds Grafana, which also reads AWS CloudWatch directly using an IRSA role rather than stored credentials. Prometheus also feeds Alertmanager, which routes alerts by severity and owning team to the team that owns the affected service.</desc>
-      <g fill="none" stroke="currentColor" stroke-width="1.5">
-        <rect x="8" y="18" width="150" height="40" rx="6"/>
-        <rect x="8" y="74" width="150" height="40" rx="6"/>
-        <rect x="8" y="130" width="150" height="40" rx="6"/>
-        <rect x="8" y="192" width="150" height="40" rx="6"/>
-        <rect x="238" y="74" width="150" height="52" rx="6"/>
-        <rect x="238" y="178" width="150" height="40" rx="6"/>
-        <rect x="470" y="74" width="150" height="52" rx="6"/>
-        <rect x="470" y="178" width="150" height="40" rx="6"/>
+      <g stroke="currentColor" stroke-width="1.5">
+        <rect class="n-src" x="8" y="18" width="150" height="40" rx="6"/>
+        <rect class="n-src" x="8" y="74" width="150" height="40" rx="6"/>
+        <rect class="n-src" x="8" y="130" width="150" height="40" rx="6"/>
+        <rect class="n-src" x="8" y="192" width="150" height="40" rx="6"/>
+        <rect class="n-core" x="238" y="74" width="150" height="52" rx="6"/>
+        <rect class="n-out" x="238" y="178" width="150" height="40" rx="6"/>
+        <rect class="n-out" x="470" y="74" width="150" height="52" rx="6"/>
+        <rect class="n-out" x="470" y="178" width="150" height="40" rx="6"/>
       </g>
       <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" text-anchor="middle">
         <text x="83" y="42">ingress traffic</text>
@@ -121,12 +118,10 @@
         <text x="430" y="150">IRSA, no stored keys</text>
       </g>
     </svg>
-    <figcaption>Everything is scraped from what the cluster already emits. The only external source is CloudWatch, reached with a scoped role rather than a stored credential.</figcaption>
+    <figcaption>Everything is scraped from what the cluster already emits. The only external source is CloudWatch, reached with a scoped IRSA role rather than a stored credential.</figcaption>
   </figure>
 
-  <p>Running Prometheus ourselves rather than buying a vendor was the decision worth defending. The signals already existed in Prometheus format — the ingress controller, kube-state-metrics and cAdvisor all expose it natively — so self-managing meant scraping what was already there instead of paying per host to re-ingest it. It also kept retention and cardinality in our hands, which on high-cardinality Kubernetes metrics is exactly where the cost surprises live. The trade is real, and we paid it: we carried the operational burden of the stack ourselves.</p>
-
-  <p>Availability is measured over a rolling thirty-day window, counting 5xx as failure and excluding 4xx as client error:</p>
+  <p>Availability over a rolling 30-day window, 5xx as failure:</p>
 
   <div class="artifact">
 <pre><code><span class="c-com"># 30-day availability. 5xx counts as failure; 4xx is treated as client error.</span>
@@ -141,24 +136,23 @@ sum(increase(nginx_ingress_controller_requests{
 * <span class="c-key">100</span></code></pre>
   </div>
 
-  <p>Running the stack ourselves has an operational cost, and it arrived during a staging rollout when Alertmanager went into a crash loop — the monitoring failing while it was meant to be watching everything else. The base chart enabled high-availability gossip unconditionally and staging ran a single replica, so it started up hunting for peers that did not exist. IPv6 dual-stack made the failed peer resolution surface immediately, which is why it looked like a networking problem for the first while; it wasn't, it just made the real fault visible faster. The chart fix was small — inject peer arguments only when replicas exceed one — and the change that mattered was a config-validity check in CI, so a rendered config that cannot start now fails before merge instead of at rollout.</p>
+  <p>Running Prometheus ourselves rather than buying a vendor was the decision worth defending: the signals already existed in Prometheus format, so self-managing meant scraping what was there instead of paying per host to re-ingest it &mdash; and retention and cardinality stayed ours. We paid for it by carrying the stack.</p>
 
   <h2>What went wrong</h2>
 
-  <p>The SLI counts some of our own failures as successes, and I shipped it that way on purpose.</p>
+  <p><strong>The SLI counts some of our own failures as successes, and I shipped it that way on purpose.</strong> It excludes everything that isn't a 5xx &mdash; but a 429 is a 4xx, and a 429 is us. When the platform is rejecting requests under load, the SLI scores every rejection as a success. The measurement is most optimistic exactly when the platform is least healthy.</p>
 
-  <p>Look at the artifact above: it excludes everything that isn't a 5xx. Treating 4xx as client error is the standard simplification and it's right for most of the class — a 404 for a URL someone mistyped is not a reliability failure, and counting it as one would make the number meaningless in the other direction.</p>
+  <p>I'd ship the same v1 again &mdash; a defensible simplification that exists beats a perfect definition still being argued about. What I'd change is treating the exclusion as finished rather than provisional, and writing the bias into the SLO document instead of carrying it in my head.</p>
 
-  <p>But a 429 is a 4xx, and a 429 is us. When the platform is under enough load to start rejecting requests, those rejections are our failure and the SLI scores every one of them as a success. Which means the measurement is <em>most optimistic exactly when the platform is least healthy</em> — the error is not random, it's biased in the worst available direction. An SLO that looks best under stress is the specific way a reliability target can lie to you.</p>
+  <details class="method">
+    <summary>Scope, ownership, and the operational cost</summary>
+    <p>Platform team of six engineers and a manager. Three environments, 40&ndash;50 services across 10&ndash;15 namespaces, 20&ndash;30 nodes, 15+ production deploys a day. I owned this end to end &mdash; the Helm chart, Prometheus configuration, SLO definition, dashboards, alerting rules and runbooks. The 99.9% target has held since early 2024. IAM and networking were shared team ground.</p>
+    <p>The operational cost arrived during a staging rollout when Alertmanager crash-looped &mdash; the base chart enabled HA gossip unconditionally while staging ran a single replica, so it started up hunting for peers that did not exist. The chart fix was small; the change that mattered was a config-validity check in CI, so a config that cannot start now fails before merge.</p>
+  </details>
 
-  <p>I'd ship the same v1 again, and that isn't a dodge. The platform had no reliability target at all, and a defensible simplification that exists beats a perfect definition still being argued about — you cannot tune alerting against a number nobody has agreed on. What I would change is treating the exclusion as finished rather than provisional. The correction is specific and I can describe it: re-include platform-generated 4xx — our own 429s and any 4xx produced by the ingress rather than the application — while keeping genuine 400s, 401s and 404s out. I knew the bias, and I should have written it into the SLO document next to the target instead of carrying it in my head.</p>
-
-  <footer>
-    <a href="./">All projects</a> · <a href="../">Home</a>
-  </footer>
+  <p class="foot"><a href="./">All projects</a> &middot; <a href="../">Home</a></p>
 
 </div>
-
 <script>
 /* Progressive enhancement only. Without this the budget bar still renders
    the real incident: 12 minutes of a 43.2 minute month. */
