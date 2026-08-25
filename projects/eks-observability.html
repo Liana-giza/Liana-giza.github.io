@@ -136,7 +136,7 @@ sum(increase(nginx_ingress_controller_requests{
 * <span class="c-key">100</span></code></pre>
   </div>
 
-  <p>Running Prometheus ourselves rather than buying a vendor was the decision worth defending: the signals already existed in Prometheus format, so self-managing meant scraping what was there instead of paying per host to re-ingest it &mdash; and retention and cardinality stayed ours. We paid for it by carrying the stack.</p>
+  <p>Replacing Datadog for our services with a stack we ran ourselves was the decision worth defending: the signals already existed in Prometheus format, so self-managing meant scraping what was there instead of paying per host to re-ingest it &mdash; and retention and cardinality stayed ours. Datadog stayed in use elsewhere in the company. We paid for this by carrying the stack.</p>
 
   <h2>What went wrong</h2>
 
