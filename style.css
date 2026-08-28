@@ -355,7 +355,7 @@ details.method p { margin: 0.6rem 0 0; font-size: 0.9375rem; color: var(--muted)
 .wide .showcase.framed .panel-body { padding: 1.4rem 1.1rem 1.1rem; }
 .wide .showcase.framed svg { display: block; width: 100%; height: auto; color: var(--fg); }
 .wide .showcase.framed figcaption { margin: 1rem 0.25rem 0; max-width: 72ch; color: var(--muted); font-size: 0.85rem; font-family: var(--sans); line-height: 1.55; }
-.wide .showcase.framed figcaption .go { display: inline-block; margin-top: 0.35rem; color: var(--accent); }
+.wide .showcase.framed figcaption .go { display: block; margin-top: 0.5rem; color: var(--accent); }
 
 .wide .sec-label {
   display: flex; align-items: center; gap: 0.75rem; margin: 0 0 0.9rem;
