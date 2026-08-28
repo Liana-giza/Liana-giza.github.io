@@ -391,6 +391,9 @@ details.method p { margin: 0.6rem 0 0; font-size: 0.9375rem; color: var(--muted)
 .wide .pcard-metric { display: block; margin: 0 0 0.35rem; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--cat); }
 .wide .pcard-title { display: block; margin: 0 0 0.35rem; font-size: 1.03rem; font-weight: 700; line-height: 1.22; letter-spacing: -0.012em; }
 .wide .pcard-note { display: block; margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+.wide .pcard-time { display: block; margin: 0.7rem 0 0; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); opacity: .8; }
+.wide .who a.home { color: var(--fg); text-decoration: none; }
+.wide .who a.home:hover { color: var(--accent); }
 
 .c-agents { --cat: var(--cat-agents); }
 .c-rely   { --cat: var(--cat-rely); }
