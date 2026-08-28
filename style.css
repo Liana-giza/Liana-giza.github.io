@@ -5,15 +5,14 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap");
 
 :root {
-  /* Direction D — teal ground, but with real separation between the page
-     and the surfaces on it, so a long page never reads as one flat wall. */
-  --bg: #112724;
-  --card: #1a3733;
-  --fg: #ecebe6;
-  --muted: #95aca7;
-  --rule: #2a4a44;
-  --rule-strong: #4a736b;
-  --hover: #1f403a;
+  /* Direction D — teal ground, colour lives in the artwork */
+  --bg: #0f3531;
+  --card: #123c37;
+  --fg: #f2ede4;
+  --muted: #93b3ac;
+  --rule: #285751;
+  --rule-strong: #3d7a70;
+  --hover: #16453f;
   --accent: #e0a03a;
   --focus: #6f95dd;
 
@@ -41,10 +40,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0d211e;
-    --card: #16302c;
-    --rule: #24423d;
-    --hover: #1b3833;
+    --bg: #0b2b28;
+    --card: #0f342f;
+    --rule: #23504b;
+    --hover: #133c37;
   }
 }
 
@@ -277,10 +276,26 @@ footer {
 @media (max-width: 46rem) { .doors.with-thumb { grid-template-columns: 1fr; } }
 
 /* project pages: collapsible method notes + diagram node fills */
-details.method { margin: 1.25rem 0 0; padding: 0.75rem 1rem; background: var(--card); border: 1px solid var(--rule); border-radius: 8px; }
-details.method summary { cursor: pointer; font-size: 0.9375rem; font-weight: 600; color: var(--muted); }
-details.method[open] summary { margin-bottom: 0.5rem; }
-details.method p { margin: 0.6rem 0 0; font-size: 0.9375rem; color: var(--muted); }
+details.method {
+  margin: 1.25rem 0 0; padding: 0;
+  background: var(--card); border: 1px solid var(--rule);
+  border-radius: 6px; overflow: hidden;
+}
+details.method summary {
+  cursor: pointer; list-style: none;
+  padding: 0.5rem 0.9rem;
+  background: var(--accent); color: #10201d;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.09em; text-transform: uppercase;
+}
+details.method summary::-webkit-details-marker { display: none; }
+details.method summary::after { content: " +"; font-weight: 700; }
+details.method[open] summary::after { content: " \2212"; }
+details.method summary:hover { filter: brightness(1.07); }
+details.method summary:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+details.method[open] summary { margin-bottom: 0; }
+details.method p { margin: 0; padding: 0.85rem 0.95rem; font-size: 0.9375rem; color: var(--muted); }
+details.method p + p { padding-top: 0; }
 .n-src  { fill: var(--hover); }
 .n-core { fill: var(--left); stroke: var(--left-ink); }
 .n-out  { fill: var(--card); stroke: var(--rule-strong); }
