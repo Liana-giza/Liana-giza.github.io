@@ -452,3 +452,53 @@ details.method p + p { padding-top: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ============================================================
+   Landing safety diagram.
+   Nodes are groups so the label counts as part of the hover
+   target; hovering one lights it and the arrows touching it.
+   ============================================================ */
+
+.dgm { color: var(--fg); }
+.dgm text { font-family: var(--sans); text-anchor: middle; }
+.dgm .lbl { font-size: 13px; font-weight: 600; fill: var(--fg); }
+.dgm .sub { font-size: 10.5px; fill: var(--muted); }
+
+.dgm .box {
+  fill: var(--hover); stroke: var(--rule-strong); stroke-width: 1.4;
+  transition: fill .15s, stroke .15s;
+}
+.dgm .n-read .box { fill: var(--left); stroke: var(--left-ink); }
+.dgm .n-read .lbl, .dgm .n-read .sub { fill: var(--left-ink); }
+.dgm .n-act .box { fill: var(--spent); stroke: var(--spent-ink); }
+.dgm .n-act .lbl, .dgm .n-act .sub { fill: var(--spent-ink); }
+
+.dgm .ln { fill: none; stroke: var(--rule-strong); stroke-width: 1.6; transition: stroke .15s, stroke-width .15s; }
+.dgm .hd { fill: var(--rule-strong); transition: fill .15s; }
+
+.dgm .barrier .bar { fill: none; stroke: var(--spent-over); stroke-width: 1.3; stroke-dasharray: 5 5; opacity: .75; }
+.dgm .barrier .cross { fill: none; stroke: var(--spent-over); stroke-width: 1.8; }
+.dgm .barrier text { font-size: 10.5px; font-style: italic; fill: var(--spent-over); }
+
+.dgm .node { pointer-events: all; }
+.dgm .node:hover .box { stroke: var(--accent); stroke-width: 2; filter: brightness(1.12); }
+.dgm .node:hover .lbl { fill: var(--accent); }
+.dgm .n-read:hover .lbl, .dgm .n-act:hover .lbl { fill: inherit; }
+
+/* an edge lights up with either node it touches */
+.dgm:has(.n-eng:hover)     :is(.from-eng, .to-eng) .ln,
+.dgm:has(.n-read:hover)    :is(.from-read, .to-read) .ln,
+.dgm:has(.n-act:hover)     :is(.from-act, .to-act) .ln,
+.dgm:has(.n-prom:hover)    :is(.from-prom, .to-prom) .ln,
+.dgm:has(.n-pr:hover)      :is(.from-pr, .to-pr) .ln,
+.dgm:has(.n-cluster:hover) :is(.from-cluster, .to-cluster) .ln {
+  stroke: var(--accent); stroke-width: 2.6;
+}
+.dgm:has(.n-eng:hover)     :is(.from-eng, .to-eng) .hd,
+.dgm:has(.n-read:hover)    :is(.from-read, .to-read) .hd,
+.dgm:has(.n-act:hover)     :is(.from-act, .to-act) .hd,
+.dgm:has(.n-prom:hover)    :is(.from-prom, .to-prom) .hd,
+.dgm:has(.n-pr:hover)      :is(.from-pr, .to-pr) .hd,
+.dgm:has(.n-cluster:hover) :is(.from-cluster, .to-cluster) .hd {
+  fill: var(--accent);
+}
