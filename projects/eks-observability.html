@@ -17,12 +17,19 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Liana Gizatulina, Platform / DevOps Engineer. 99.9% SLO since 2024, environments 2 days to 1 hour, AI triage 22 to 8 min.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="../style.css?v=8">
+<link rel="stylesheet" href="../style.css?v=9">
 </head>
 <body class="c-rely">
 <div class="wrap">
 
-  <a class="back" href="./">&larr; Projects</a>
+  <nav class="site-nav">
+    <span class="who"><a class="home" href="./">&larr; Projects</a></span>
+    <span class="nav-links">
+      <a href="../resume.pdf">Resume</a>
+      <a href="https://linkedin.com/in/liana-gizatulina">LinkedIn</a>
+      <a href="mailto:liana.gizatulina@gmail.com">Email</a>
+    </span>
+  </nav>
 
   <h1 class="name">Giving a platform a reliability number it could defend</h1>
 
@@ -101,7 +108,7 @@
         <path d="M158 38 L 200 38 L 200 94 L 236 94"/>
         <path d="M158 94 L 236 94"/>
         <path d="M158 150 L 200 150 L 200 106 L 236 106"/>
-        <path d="M158 212 L 430 212 L 430 110 L 468 110"/>
+        <path d="M158 212 L 215 212 L 215 158 L 430 158 L 430 110 L 468 110"/>
         <path d="M388 100 L 468 100"/>
         <path d="M313 126 L 313 176"/>
         <path d="M388 198 L 468 198"/>
@@ -115,7 +122,7 @@
         <path d="M313 176 l -3.5 -7 h 7 z"/>
       </g>
       <g fill="currentColor" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10.5" font-style="italic" text-anchor="middle">
-        <text x="430" y="150">IRSA, no stored keys</text>
+        <text x="320" y="148">IRSA, no stored keys</text>
       </g>
     </svg>
     <figcaption>Everything is scraped from what the cluster already emits. The only external source is CloudWatch, reached with a scoped IRSA role rather than a stored credential.</figcaption>
@@ -151,6 +158,10 @@ sum(increase(nginx_ingress_controller_requests{
   </details>
 
   <p class="foot"><a href="./">All projects</a> &middot; <a href="../">Home</a></p>
+
+  <footer>
+    <a href="./">All projects</a> &middot; <a href="../">Home</a> &middot; <a href="mailto:liana.gizatulina@gmail.com">liana.gizatulina@gmail.com</a>
+  </footer>
 
 </div>
 <script>

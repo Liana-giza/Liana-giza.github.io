@@ -17,12 +17,19 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Liana Gizatulina, Platform / DevOps Engineer. 99.9% SLO since 2024, environments 2 days to 1 hour, AI triage 22 to 8 min.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="../style.css?v=8">
+<link rel="stylesheet" href="../style.css?v=9">
 </head>
 <body class="c-agents">
 <div class="wrap">
 
-  <a class="back" href="./">&larr; Projects</a>
+  <nav class="site-nav">
+    <span class="who"><a class="home" href="./">&larr; Projects</a></span>
+    <span class="nav-links">
+      <a href="../resume.pdf">Resume</a>
+      <a href="https://linkedin.com/in/liana-gizatulina">LinkedIn</a>
+      <a href="mailto:liana.gizatulina@gmail.com">Email</a>
+    </span>
+  </nav>
 
   <h1 class="name">AI incident triage, without giving the agent production access</h1>
 
@@ -153,7 +160,7 @@ TAG_RE = re.compile(<span class="c-key">r"^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$"</
   <p>That's the rule the rest of the design follows: the model expresses intent, trusted code resolves the target. It's why the registry prefix and namespace are pinned server-side rather than passed in, and why the delete tool refuses to touch anything it didn't create. A tool signature is a security boundary, and I'd written that one as a convenience.</p>
 
   <footer>
-    <a href="./">All projects</a> · <a href="../">Home</a>
+    <a href="./">All projects</a> &middot; <a href="../">Home</a> &middot; <a href="mailto:liana.gizatulina@gmail.com">liana.gizatulina@gmail.com</a>
   </footer>
 
 </div>
