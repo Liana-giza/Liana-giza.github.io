@@ -71,7 +71,8 @@ body {
 .wrap.wide { max-width: var(--wide); }
 /* Prose keeps a readable measure; structure - headings and their rules,
    diagrams, code, the method panels - spans the full shell. */
-.wrap > p, .wrap > ul, .wrap > ol, .wrap > dl, .wrap > blockquote { max-width: var(--measure); }
+.wrap:not(.wide) > p, .wrap:not(.wide) > ul, .wrap:not(.wide) > ol,
+.wrap:not(.wide) > dl, .wrap:not(.wide) > blockquote { max-width: var(--measure); }
 
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 2px; }
 a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
@@ -345,6 +346,18 @@ details.method p + p { padding-top: 0; }
 .nav-links { display: flex; gap: 1.15rem; flex-wrap: wrap; font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.04em; }
 .nav-links a { color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 2px; }
 .nav-links a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Hero runs as two columns on a wide screen - the pitch on the left, the
+   safety diagram on the right - then stacks below 62rem. */
+.wide .hero-split { display: grid; gap: 1.75rem; align-items: center; margin-bottom: clamp(2.2rem, 5vw, 3.5rem); }
+@media (min-width: 62rem) {
+  .wide .hero-split { grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr); gap: 2.75rem; }
+}
+.wide .hero-split .hero h1 { font-size: clamp(1.7rem, 2.9vw, 2.45rem); max-width: 15ch; margin-bottom: 1.1rem; }
+.wide .hero-split .hook { max-width: none; font-size: 0.95rem; margin-bottom: 1.4rem; }
+.wide .hero-split .chips { margin-bottom: 0; }
+.wide .hero-split .showcase.framed { margin: 0; }
+.wide .hero-split .showcase.framed svg { max-width: none; }
 
 .wide .hero h1 {
   margin: 0 0 1.35rem; max-width: 20ch;
