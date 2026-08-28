@@ -5,14 +5,15 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap");
 
 :root {
-  /* Direction D — dark ground with a green cast, colour from the artwork */
-  --bg: #151d1b;
-  --card: #1b2523;
+  /* Direction D — teal ground, but with real separation between the page
+     and the surfaces on it, so a long page never reads as one flat wall. */
+  --bg: #112724;
+  --card: #1a3733;
   --fg: #ecebe6;
-  --muted: #98a5a1;
-  --rule: #2c3936;
-  --rule-strong: #47605b;
-  --hover: #202b28;
+  --muted: #95aca7;
+  --rule: #2a4a44;
+  --rule-strong: #4a736b;
+  --hover: #1f403a;
   --accent: #e0a03a;
   --focus: #6f95dd;
 
@@ -40,10 +41,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #101716;
-    --card: #16201e;
-    --rule: #26322f;
-    --hover: #1a2422;
+    --bg: #0d211e;
+    --card: #16302c;
+    --rule: #24423d;
+    --hover: #1b3833;
   }
 }
 
