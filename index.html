@@ -19,7 +19,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 
@@ -120,8 +120,7 @@
   <figure class="showcase framed">
     <div class="panel-bar"><span>Safety model</span><b>read / write split</b></div>
     <div class="panel-body">
-      <svg class="dgm" viewBox="0 0 700 250" role="img" aria-labelledby="home-diagram-title home-diagram-desc" xmlns="http://www.w3.org/2000/svg">
-        <title id="home-diagram-title">Read and write paths, separated</title>
+      <svg class="dgm" viewBox="0 0 700 250" role="img" aria-label="Read and write paths, separated" aria-describedby="home-diagram-desc" xmlns="http://www.w3.org/2000/svg">
         <desc id="home-diagram-desc">The assistant reaches the read server, which queries Prometheus, Kubernetes state, and bounded logs using a read-only service account. Separately, the assistant reaches the action server, which holds no cluster credentials and can only open a GitHub pull request. A human reviews and merges that pull request, and only then does the delivery pipeline apply the change to the cluster. There is no path from the agent directly to the cluster.</desc>
 
         <g class="edge from-eng to-read"><path class="ln" d="M132 112 H 156 V 53 H 176"/><path class="hd" d="M178 53 l -8 -4 v 8 z"/></g>

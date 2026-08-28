@@ -483,7 +483,10 @@ details.method p + p { padding-top: 0; }
 .dgm .node { pointer-events: all; }
 .dgm .node:hover .box { stroke: var(--accent); stroke-width: 2; filter: brightness(1.12); }
 .dgm .node:hover .lbl { fill: var(--accent); }
-.dgm .n-read:hover .lbl, .dgm .n-act:hover .lbl { fill: inherit; }
+/* Restate these explicitly. 'inherit' walked up to a parent with no fill
+   and resolved to SVG's default black, which is unreadable on the fills. */
+.dgm .n-read:hover .lbl { fill: var(--left-ink); }
+.dgm .n-act:hover  .lbl { fill: var(--spent-ink); }
 
 /* an edge lights up with either node it touches */
 .dgm:has(.n-eng:hover)     :is(.from-eng, .to-eng) .ln,
