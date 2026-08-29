@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; }
+  body {
+    background: #0f3531;
+    font-family: "IBM Plex Sans", -apple-system, Helvetica, Arial, sans-serif;
+    color: #f2ede4;
+    position: relative;
+    overflow: hidden;
+  }
+  .art { position: absolute; right: -18px; top: 62px; width: 430px; opacity: .17; color: #4e857a; }
+  .frame {
+    position: absolute; inset: 26px;
+    border: 1px solid #285751; border-radius: 6px;
+    padding: 52px 58px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .role {
+    font-family: "IBM Plex Mono", monospace; font-size: 17px; font-weight: 500;
+    letter-spacing: .17em; text-transform: uppercase; color: #93b3ac;
+    margin-bottom: 14px;
+  }
+  .name { font-size: 38px; font-weight: 700; letter-spacing: -.018em; margin-bottom: 40px; }
+  .pitch {
+    font-size: 50px; font-weight: 700; line-height: 1.14; letter-spacing: -.026em;
+    max-width: 770px;
+  }
+  .pitch em { font-style: normal; color: #e0a03a; }
+  .sub {
+    margin-top: 26px; font-size: 21px; line-height: 1.5; color: #93b3ac;
+    max-width: 640px;
+  }
+  .foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+  .nums {
+    font-family: "IBM Plex Mono", monospace; font-size: 16.5px; color: #93b3ac;
+    display: flex; gap: 26px; flex-wrap: wrap;
+  }
+  .nums b { color: #e0a03a; font-weight: 500; }
+  .dots { display: flex; gap: 9px; margin-bottom: 13px; }
+  .dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .site { font-family: "IBM Plex Mono", monospace; font-size: 17px; color: #f2ede4; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<svg class="art" viewBox="0 0 320 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <g fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="46" cy="34" r="7"/><circle cx="30" cy="72" r="7"/><circle cx="74" cy="86" r="7"/><circle cx="88" cy="46" r="7"/>
+    <path d="M46 34L88 46M46 34L30 72M30 72L74 86M88 46L74 86M46 34L74 86"/>
+    <circle cx="232" cy="40" r="7"/><circle cx="272" cy="66" r="7"/><circle cx="240" cy="88" r="7"/>
+    <path d="M232 40L272 66M272 66L240 88M232 40L240 88"/>
+  </g>
+  <path d="M160 14V106" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 6" opacity=".8"/>
+  <g stroke="currentColor" stroke-width="2" fill="none">
+    <path d="M104 60h94"/><path d="M190 53l9 7-9 7"/>
+  </g>
+</svg>
+
+<div class="frame">
+  <div>
+    <p class="role">Platform / DevOps Engineer</p>
+    <p class="name">Liana Gizatulina</p>
+    <p class="pitch">I build the infrastructure<br>other engineers <em>deploy on.</em></p>
+    <p class="sub">AWS &middot; Kubernetes &middot; Terraform &mdash; and the guardrails that let AI do real infrastructure work safely.</p>
+  </div>
+
+  <div class="foot">
+    <div>
+      <div class="dots">
+        <i style="background:#ec6b4a"></i><i style="background:#e0a03a"></i><i style="background:#6f95dd"></i>
+      </div>
+      <div class="nums">
+        <span>AI triage <b>22 &rarr; 8 min</b></span>
+        <span>environments <b>2 days &rarr; 1 hour</b></span>
+        <span><b>99.9% SLO</b> held since 2024</span>
+      </div>
+    </div>
+    <span class="site">lianagizatulina.com</span>
+  </div>
+</div>
+
+</body>
+</html>
